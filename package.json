@@ -1,0 +1,32 @@
+{
+  "name": "calver",
+  "version": "20.5.1",
+  "description": "The calver parser for node. Because we love calendar versioning! 💙🎈",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "NODE_ENV=test jasmine",
+    "commit": "node dev/commit.js commit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muratgozel/node-calver.git"
+  },
+  "keywords": [
+    "calver",
+    "calendar",
+    "versioning",
+    "semver",
+    "semantic",
+    "versioning",
+    "versioning"
+  ],
+  "author": "Murat Gözel <murat@gozel.com.tr>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/muratgozel/node-calver/issues"
+  },
+  "homepage": "https://github.com/muratgozel/node-calver#readme",
+  "devDependencies": {
+    "yargs": "^15.3.1"
+  }
+}
