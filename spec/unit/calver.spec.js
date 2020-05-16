@@ -7,7 +7,11 @@ describe('Basic functionality.', function() {
     expect(function() {new Calver('AA');}).toThrow()
   })
 
-  it('throws if user changes format later.', function() {
+  it('throws if version and format doesn\'t match.', function() {
+    expect(function() {new Calver('YY.MM.MINOR', '20.5.3.0');}).toThrow()
+  })
+
+  it('throws if user tries to change format later.', function() {
     expect(function() { return calver.setFormat('YY.MM') }).toThrow()
   })
 
@@ -19,6 +23,25 @@ describe('Basic functionality.', function() {
   it('returns current version.', function() {
     const version = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0'
     expect(calver.get()).toBe(version)
+  })
+
+  it('increments an existing version.', function() {
+    const calver2 = new Calver('YY.MM.MINOR', '19.1.2')
+    expect(calver2.get()).toBe('19.1.2')
+
+    calver2.inc()
+    const version = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0'
+    expect(calver2.get()).toBe(version)
+
+    calver2.inc()
+    const version2 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.1'
+    expect(calver2.get()).toBe(version2)
+
+    const calver3 = new Calver('YY.MM.MINOR', '20.5.1')
+    expect(calver3.get()).toBe('20.5.1')
+
+    calver3.inc()
+    expect(calver3.get()).toBe('20.5.2')
   })
 
   it('cleans the given input.', function() {

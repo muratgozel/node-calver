@@ -1,4 +1,4 @@
-function Calver(format) {
+function Calver(format, version) {
   this.value = {}
   this.format = ''
   this.formatTagsDate = ['YYYY', 'YY', '0Y', 'MM', '0M', 'WW', '0W', 'DD', '0D']
@@ -8,6 +8,7 @@ function Calver(format) {
   this.reMatcher = /[0-9]+([0-9.]+)?/g
   this.reTester = /[^0-9.]/g
   this.setFormat(format)
+  this.set(version)
 }
 
 Calver.prototype.inc = function inc(inctag = undefined) {
@@ -29,6 +30,9 @@ Calver.prototype.inc = function inc(inctag = undefined) {
 
   if (areAllDateTagsEqual === false) {
     this.value = newValue
+    if (this.value.hasOwnProperty('MAJOR')) this.value.MAJOR = 0
+    if (this.value.hasOwnProperty('MINOR')) this.value.MINOR = 0
+    if (this.value.hasOwnProperty('MICRO')) this.value.MICRO = 0
     return this;
   }
 
@@ -41,12 +45,15 @@ Calver.prototype.inc = function inc(inctag = undefined) {
     throw new Error('Invalid semantic tag specified. ('+inctag+')')
 
   newValue[inctag] = newValue[inctag] + 1
+
   if (inctag == 'MAJOR') {
     newValue.MINOR = 0
     newValue.MICRO = 0
   }
   if (inctag == 'MINOR') newValue.MICRO = 0
+
   this.value = newValue
+
   return this;
 }
 
@@ -176,7 +183,7 @@ Calver.prototype.setFormat = function setFormat(str) {
     throw new Error('Couldn\'t set format. Type of the input must be a string.')
 
   if (this.format.length > 0)
-    throw new Error('Format can not be changed after set once.')
+    throw new Error('Format can not be changed after once set.')
 
   // force uppercase
   str = str.toUpperCase()
@@ -188,25 +195,40 @@ Calver.prototype.setFormat = function setFormat(str) {
 
   this.format = str
 
-  if (Object.keys(this.value).length === 0)
-    this.genInitialValue()
-
   return this
 }
 
-Calver.prototype.genInitialValue = function genInitialValue() {
-  const now = new Date()
-  const month = now.getMonth() + 1
-  const day = now.getDate()
+Calver.prototype.set = function set(version) {
   const tags = this.format.split('.')
+  const isInitial = Object.keys(this.value).length === 0
   const semanticTags = []
+
+  if (isInitial && typeof version == 'undefined') {
+    const now = new Date()
+    for (let i = 0; i < tags.length; i++) {
+      const tag = tags[i]
+      this.value[tag] = this.getTagValue(tag, now)
+      if (this.formatTagsSemantic.indexOf(tag) !== -1) semanticTags.push(tag)
+    }
+    if (semanticTags.length === 1) this.defaultIncTag = semanticTags[0]
+    return this;
+  }
+
+  if (typeof version == 'undefined')
+    throw new Error('Specify a version.')
+
+  const parts = version.split('.')
+  if (parts.length != tags.length)
+    throw new Error('Version and format doesn\'t match.')
+
   for (let i = 0; i < tags.length; i++) {
     const tag = tags[i]
-    this.value[tag] = this.getTagValue(tag, now)
+    this.value[tag] = tag.slice(0, 1) == '0' ? parts[i] : parseInt(parts[i])
     if (this.formatTagsSemantic.indexOf(tag) !== -1) semanticTags.push(tag)
   }
   if (semanticTags.length === 1) this.defaultIncTag = semanticTags[0]
-  return this;
+
+  return this
 }
 
 Calver.prototype.getWeekNumber = function getWeekNumber(date, opts = {zeroPadded: false}) {

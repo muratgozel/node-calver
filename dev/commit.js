@@ -47,7 +47,7 @@ function commit(argv) {
 
     // check version
     const version = readVersion()
-    const calver = new Calver('YY.MM.MINOR')
+    const calver = new Calver('YY.MM.MINOR', version)
     const newVersion = calver.inc().get()
     const msg = argv.message
 

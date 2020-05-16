@@ -1,5 +1,5 @@
 # node-calver | The Calendar Versioner
-The calver parser for node. Because we love calendar versioning! 💙🎈
+The calver parser for node. Because we love calendar versioning! 📆 🚀
 
 ![NPM](https://img.shields.io/npm/l/calver)
 [![npm version](https://badge.fury.io/js/calver.svg)](https://badge.fury.io/js/calver)
@@ -21,27 +21,24 @@ Decide your format and you'r good to to.
 // get Calver prototype object
 const Calver = require('calver')
 
-// initiate a new versioner by specifiying a format
-const calver = new Calver('YY.MM.MICRO')
+// initiate a new versioner by specifiying a format and optional version
+const calver = new Calver('YY.MM.MICRO', '19.12.3')
 
-// get the initial version
-const initialVersion = calver.get()
-// returns current year and month in utc and incremental semantic number. 20.5.0 for example.
+// get the current version
+const currentVersion = calver.get() // 19.12.3
 
-// increment the active version
-calver.inc()
-// increments according to date or semantic tags.
+// increment the current version
+calver.inc() // calver
 
 // get current version
-calver.get()
-// 20.5.1 or 20.6.0 for example.
+calver.get() // 20.5.0 (current year and month, MICRO reset to zero.)
 
 // compare with other version strings in the same format
 calver.gt('20.4') // true
 calver.lt('21.0') // true
 
 // convert calver version into a semver parsable format
-calver.toSemver()
+calver.toSemver() // 20.5.0
 ```
 
 ### Helper Methods
