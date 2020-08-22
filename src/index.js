@@ -1,92 +1,71 @@
-function Calver(format, version) {
-  this.value = {}
-  this.format = ''
-  this.formatTagsDate = ['YYYY', 'YY', '0Y', 'MM', '0M', 'WW', '0W', 'DD', '0D']
-  this.formatTagsSemantic = ['MAJOR', 'MINOR', 'MICRO', 'MODIFIER']
-  this.validFormatTags = [].concat(this.formatTagsDate).concat(this.formatTagsSemantic)
-  this.defaultIncTag = undefined
-  this.reMatcher = /[0-9]+([0-9.]+)?/g
-  this.reTester = /[^0-9.]/g
-  this.setFormat(format)
-  this.set(version)
+function Calver(format, initialVersion) {
+  this.validDateTags = ['YYYY', 'YY', '0Y', 'MM', '0M', 'WW', '0W', 'DD', '0D']
+  this.validSemanticTags = ['MAJOR', 'MINOR', 'MICRO'] // TODO add MODIFIER
+  this.reVersionMatcher = /[0-9]+([0-9.]+)?/g
+  this.now = new Date()
+
+  this.format = null
+  this.hasSemanticTag = null
+  this.validateFormat(format)
+
+  this.value = null
+  if (typeof initialVersion == 'string' && initialVersion.length > 0) this.parse(initialVersion)
+  else this.createInitialVersion()
 }
 
-Calver.prototype.inc = function inc(inctag = undefined) {
-  if (typeof inctag == 'string') inctag = inctag.toUpperCase()
-  const now = new Date()
-  const tags = this.format.split('.')
-  const newValue = {}
-  let
-    areAllDateTagsEqual = true
-    areAllSemanticTagsEqual = true
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    newValue[tag] = this.getTagValue(tag, now)
-    if (newValue[tag] !== this.value[tag]) {
-      if (this.formatTagsDate.indexOf(tag) !== -1) areAllDateTagsEqual = false
-      if (this.formatTagsSemantic.indexOf(tag) !== -1) areAllSemanticTagsEqual = false
+Calver.prototype.inc = function inc(semanticTag = null) {
+  if (typeof semanticTag == 'string') semanticTag = semanticTag.toUpperCase()
+
+  if (typeof semanticTag == 'string' && this.validSemanticTags.indexOf(semanticTag) !== -1) {
+    if (!this.hasSemanticTag || !this.value.hasOwnProperty(semanticTag)) throw new Error('Couldn\'t increment semantic tag '+semanticTag+' because version doesn\'t have such tag.')
+
+    this.value[semanticTag] = parseInt(this.value[semanticTag]) + 1
+
+    const semanticInd = this.validSemanticTags.indexOf(semanticTag)
+    if (semanticInd < this.validSemanticTags.length - 1) {
+      for (let i = semanticInd + 1; i < this.validSemanticTags.length - 1; i++) {
+        const nextSemanticTag = this.validSemanticTags[i]
+        if (this.value.hasOwnProperty(nextSemanticTag)) this.value[nextSemanticTag] = 0
+      }
     }
+
+    return this
   }
 
-  if (areAllDateTagsEqual === false) {
-    this.value = newValue
-    if (this.value.hasOwnProperty('MAJOR')) this.value.MAJOR = 0
-    if (this.value.hasOwnProperty('MINOR')) this.value.MINOR = 0
-    if (this.value.hasOwnProperty('MICRO')) this.value.MICRO = 0
-    return this;
-  }
+  let isDateTagChanged = false
+  this.value = Object.keys(this.value).reduce(function(memo, tag) {
+    if (this.validDateTags.indexOf(tag) !== -1) {
+      const v = this.getTagDefaultValue(tag)
+      if (v != this.value[tag] && isDateTagChanged === false) isDateTagChanged = true
+      memo[tag] = v
+    }
+    else {
+      memo[tag] = isDateTagChanged === true ? 0 : this.value[tag]
+    }
+    return memo
+  }.bind(this), {})
 
-  if (this.defaultIncTag) inctag = this.defaultIncTag
-
-  if (areAllSemanticTagsEqual === true && typeof inctag != 'string')
-    throw new Error('Specify a semantic tag to increment.')
-
-  if (areAllSemanticTagsEqual === true && this.formatTagsSemantic.indexOf(inctag) === -1)
-    throw new Error('Invalid semantic tag specified. ('+inctag+')')
-
-  newValue[inctag] = newValue[inctag] + 1
-
-  if (inctag == 'MAJOR') {
-    newValue.MINOR = 0
-    newValue.MICRO = 0
-  }
-  if (inctag == 'MINOR') newValue.MICRO = 0
-
-  this.value = newValue
-
-  return this;
+  return this
 }
 
 Calver.prototype.get = function get() {
-  if (this.format.length < 1)
-    throw new Error('Couldn\'t get version. Invalid format.')
-
-  const version = []
-  const tags = this.format.split('.')
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    if (!this.value.hasOwnProperty(tag))
-      throw new Error('Couldn\'t get version. The value of the tag ' + tag + ' not found.')
-    version.push(this.value[tag])
-  }
-  return version.join('.')
+  const self = this
+  return Object.keys(self.value).reduce(function(memo, tag) {
+    memo = memo.concat([self.value[tag]])
+    return memo
+  }, []).join('.')
 }
 
 Calver.prototype.gt = function gt(versionStr) {
-  const compVersion = this.parse(versionStr, this.format)
+  versionStr = this.clean(versionStr)
+  const ins = new Calver(this.format, versionStr)
   const tags = this.format.split('.')
   for (let i = 0; i < tags.length; i++) {
     const tag = tags[i]
-    if (this.formatTagsDate.indexOf(tag) !== -1) {
-      const v1 = tag.slice(0, 1) == '0' ? parseInt(this.value[tag]) : this.value[tag]
-      const v2 = tag.slice(0, 1) == '0' ? parseInt(compVersion[tag]) : compVersion[tag]
-      if (v2 > v1) return false
-      if (v1 > v2) return true
-    }
-    if (this.formatTagsSemantic.indexOf(tag) !== -1) {
-      if (compVersion[tag] > this.value[tag]) return false
-      if (this.value[tag] > compVersion[tag]) return true
-    }
+    const v1 = parseInt(this.value[tag])
+    const v2 = parseInt(ins.value[tag])
+    if (v1 > v2) return true
+    if (v1 < v2) return false
   }
   return false
 }
@@ -95,159 +74,167 @@ Calver.prototype.lt = function lt(versionStr) {
   return !this.gt(versionStr)
 }
 
-Calver.prototype.valid = function valid(versionStr = undefined, format = '') {
-  if (typeof versionStr == 'undefined') return false
-  if (typeof versionStr == 'number') return versionStr.toString()
-  if (typeof versionStr != 'string') return false
-  if (this.reTester.test(versionStr) === true) return false
-  if (format == '') return versionStr
+Calver.prototype.valid = function valid(str, format) {
+  if (typeof str != 'string' || typeof format != 'string')
+    throw new Error('Version and format arguments must be string.')
 
-  const parts = versionStr.split('.')
-  const tags = format.split('.')
-  if (parts.length != tags.length) return false
-
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    if (this.validateTagValue(tag, parseInt(parts[i])) !== true) return false
+  try {
+    const ins = new Calver(format, str)
+    return true
+  } catch (e) {
+    return false
   }
-
-  return versionStr
 }
 
-Calver.prototype.toSemver = function toSemver() {
-  const tags = this.format.split('.')
-  if (tags.length < 4) return this.get()
-  const semver = []
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    semver.push(this.value[tag])
-    if (i === 2) semver.push('+')
-  }
-  return semver.join('.').replace('.+.', '+')
+Calver.prototype.clean = function clean(str) {
+  if (typeof str != 'string') return ''
+  const arr = str.match(this.reVersionMatcher)
+  return arr && arr.length > 0 ? arr[0] : ''
 }
 
-Calver.prototype.validateTagValue = function validateTagValue(tag, value) {
-  value = tag.slice(0, 1) == '0' ? parseInt(value) : value
-  if (typeof value != 'number') return false
+Calver.prototype.validateFormat = function validateFormat(format) {
+  format = format.toUpperCase()
+  const arr = format.split('.')
+  const invalidTags = arr.filter(
+    item => this.validDateTags.indexOf(item) === -1 && this.validSemanticTags.indexOf(item) === -1
+  )
+  if (invalidTags && invalidTags.length > 0)
+    throw new Error('The format you specified contains invalid tags. (' + invalidTags.join(', ') + ')')
+
+  const countDateTags = arr.filter(item => this.validDateTags.indexOf(item) !== -1)
+  if (!countDateTags || countDateTags.length === 0)
+    throw new Error('The format you specified should have at least one date tag.')
+
+  const repeatingTags = arr.filter((tag, i, self) => self.indexOf(tag) !== i)
+  if (repeatingTags && repeatingTags.length > 0)
+    throw new Error('Using the same tag more than once is not allowed.')
+
+  const countSemanticTags = arr.filter(item => this.validSemanticTags.indexOf(item) !== -1)
+  this.hasSemanticTag = countSemanticTags && countSemanticTags.length > 0
+
+  this.format = format
+}
+
+Calver.prototype.parse = function parse(str) {
+  const self = this
+
+  str = self.clean(str)
+  const strtags = str.split('.')
+  const formattags = self.format.split('.')
+  if (formattags.length !== strtags.length)
+    throw new Error('The version string '+str+' doesn\'t match with the format you specified. '+self.format)
+
+  self.value = formattags.reduce(function(memo, tag, i) {
+    memo[tag] = self.matchTagValue(tag, strtags[i])
+    if (memo[tag] === undefined)
+      throw new Error('Invalid value found in version string. The value '+strtags[i]+' is not in the format '+tag)
+    return memo
+  }, {})
+
+  return self
+}
+
+Calver.prototype.matchTagValue = function matchTagValue(tag, val) {
+  if (typeof val == 'number') val = val.toString()
+  if (/[^0-9]/g.test(val) === true) return undefined
+
+  const validMonthValues = Array(12).fill(1).map((item, ind) => ind + 1)
+  const validWeekValues = Array(52).fill(1).map((item, ind) => ind + 1)
+  const validDayValues = Array(31).fill(1).map((item, ind) => ind + 1)
 
   switch (tag) {
-    case 'YYYY': return value >= 1000 && value < 10000; break;
-    case 'YY': return value >= 0 && value < 100; break;
-    case '0Y': return value >= 0 && value < 100; break;
-    case 'MM': return value >= 1 && value <= 12; break;
-    case '0M': return value >= 1 && value <= 12; break;
-    case 'WW': return value >= 1 && value <= 52; break;
-    case '0W': return value >= 1 && value <= 52; break;
-    case 'DD': return value >= 1 && value <= 31; break;
-    case '0D': return value >= 1 && value <= 31; break;
-    default: return value > 0 && Number.isInteger(value); break;
-  }
-}
-
-Calver.prototype.parse = function parse(str, format) {
-  const value = {}
-  const parts = str.split('.')
-  const tags = format.split('.')
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    value[tag] = tag.slice(0, 1) == '0' ? parts[i] : parseInt(parts[i])
-  }
-  return value
-}
-
-Calver.prototype.getTagValue = function getTagValue(tag, now) {
-  switch (tag) {
-    case 'YYYY': return now.getFullYear(); break;
-    case 'YY': return parseInt(now.getFullYear().toString().slice(2)); break;
-    case '0Y': return now.getFullYear().toString().slice(2); break;
-    case 'MM': return now.getMonth() + 1; break;
+    case 'YYYY':
+      return /[0-9]{4}/g.test(val) === true && val.length === 4 ? val : undefined
+    break;
+    case 'YY':
+      return /[0-9]{1,3}/g.test(val) === true && val.length >= 1 && val.length <= 3 ? val : undefined
+    break;
+    case 'MM':
+      return validMonthValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
+    break;
     case '0M':
-      const m = now.getMonth() + 1
-      return (m < 10 ? '0' + m : m).toString(); break;
-    case 'WW': return this.getWeekNumber(now, {zeroPadded: false}); break;
-    case '0W': return this.getWeekNumber(now, {zeroPadded: true}); break;
-    case 'DD': return now.getDate(); break;
+      return validMonthValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
+    break;
+    case 'WW':
+      return validWeekValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
+    break;
+    case '0W':
+      return validWeekValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
+    break;
+    case 'DD':
+      return validDayValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
+    break;
+    case '0D':
+      return validDayValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
+    break;
+    case 'MAJOR':
+    case 'MINOR':
+    case 'MICRO':
+      return parseInt(val) >= 0 ? val : undefined
+    break;
+    default:
+      return undefined
+  }
+}
+
+Calver.prototype.createInitialVersion = function createInitialVersion() {
+  const self = this
+  const formattags = self.format.split('.')
+
+  self.value = formattags.reduce(function(memo, tag, i) {
+    memo[tag] = self.getTagDefaultValue(tag)
+    return memo
+  }, {})
+
+  return self
+}
+
+Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
+  const fullyear = this.now.getFullYear()
+
+  switch (tag) {
+    case 'YYYY':
+      return fullyear;
+    break;
+    case 'YY':
+      return parseInt(fullyear.toString().slice(1))
+    break;
+    case 'MM':
+      return this.now.getMonth() + 1
+    break;
+    case '0M':
+      const m = this.now.getMonth() + 1
+      return (m < 10 ? '0' + m : m).toString()
+    break;
+    case 'WW':
+      return this.getWeekNumber(this.now, {zeroPadded: false})
+    break;
+    case '0W':
+      return this.getWeekNumber(this.now, {zeroPadded: true})
+    break;
+    case 'DD':
+      return this.now.getDate()
+    break;
     case '0D':
       const day = now.getDate();
-      return (day < 10 ? '0' + day : day).toString(); break;
-    case 'MAJOR': return this.value.hasOwnProperty(tag) ? this.value[tag] : 0; break;
-    case 'MINOR': return this.value.hasOwnProperty(tag) ? this.value[tag] : 0; break;
-    case 'MICRO': return this.value.hasOwnProperty(tag) ? this.value[tag] : 0; break;
+      return (day < 10 ? '0' + day : day).toString()
+    break;
+    case 'MAJOR': return 0; break;
+    case 'MINOR': return 0; break;
+    case 'MICRO': return 0; break;
     default:
-      throw new Error('There is no such tag called '+tag+' supported.')
+      throw new Error('There is no such tag called '+tag+' supported by node-calver.')
   }
-}
-
-Calver.prototype.setFormat = function setFormat(str) {
-  if (typeof str != 'string')
-    throw new Error('Couldn\'t set format. Type of the input must be a string.')
-
-  if (this.format.length > 0)
-    throw new Error('Format can not be changed after once set.')
-
-  // force uppercase
-  str = str.toUpperCase()
-
-  // check for invalid tags
-  const invalid = str.split('.').filter(tag => this.validFormatTags.indexOf(tag) === -1)
-  if (Array.isArray(invalid) && invalid.length > 0)
-    throw new Error('Couldn\'t set format. The following tags you specified are invalid: ' + invalid.join(', '))
-
-  this.format = str
-
-  return this
-}
-
-Calver.prototype.set = function set(version) {
-  const tags = this.format.split('.')
-  const isInitial = Object.keys(this.value).length === 0
-  const semanticTags = []
-
-  if (isInitial && typeof version == 'undefined') {
-    const now = new Date()
-    for (let i = 0; i < tags.length; i++) {
-      const tag = tags[i]
-      this.value[tag] = this.getTagValue(tag, now)
-      if (this.formatTagsSemantic.indexOf(tag) !== -1) semanticTags.push(tag)
-    }
-    if (semanticTags.length === 1) this.defaultIncTag = semanticTags[0]
-    return this;
-  }
-
-  if (typeof version == 'undefined')
-    throw new Error('Specify a version.')
-
-  const parts = version.split('.')
-  if (parts.length != tags.length)
-    throw new Error('Version and format doesn\'t match.')
-
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    this.value[tag] = tag.slice(0, 1) == '0' ? parts[i] : parseInt(parts[i])
-    if (this.formatTagsSemantic.indexOf(tag) !== -1) semanticTags.push(tag)
-  }
-  if (semanticTags.length === 1) this.defaultIncTag = semanticTags[0]
-
-  return this
 }
 
 Calver.prototype.getWeekNumber = function getWeekNumber(date, opts = {zeroPadded: false}) {
   const onejan = new Date(date.getFullYear(), 0, 1)
   const number = Math.ceil( (((date - onejan) / 86400000) + onejan.getDay() + 1) / 7 )
-  return opts.zeroPadded && number < 10 ? '0' + number :
-    opts.zeroPadded === true ? number.toString() :
-    number
-}
-
-Calver.prototype.clean = function clean(str) {
-  if (typeof str != 'string')
-    return ''
-
-  const matches = str.match(this.reMatcher)
-  if (Array.isArray(matches) && matches.length > 0)
-    return matches[0]
-
-  return ''
+  return opts.zeroPadded && number < 10 ?
+    '0' + number :
+    opts.zeroPadded === true ?
+      number.toString() :
+      number
 }
 
 module.exports = Calver

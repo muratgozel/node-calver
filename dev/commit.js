@@ -48,7 +48,7 @@ function commit(argv) {
     // check version
     const version = readVersion()
     const calver = new Calver('YY.MM.MINOR', version)
-    const newVersion = calver.inc().get()
+    const newVersion = calver.inc(argv.l).get()
     const msg = argv.message
 
     // update version in package.json
@@ -84,6 +84,11 @@ cli
         alias: 'm',
         describe: 'A commit message.',
         demandOption: true
+      },
+      level: {
+        alias: 'l',
+        describe: 'Specify MINOR if you don\'t want to update date portion of the version.',
+        default: undefined
       }
     },
     commit

@@ -8,7 +8,7 @@ The calver parser for node. Because we love calendar versioning! 📆 🚀
 
 [Calendar versioning](https://calver.org/) is an alternative to [semantic versioning](https://semver.org/). They both have advantages to each other and used by popular softwares.
 
-I wrote this module to do calendar versioning seamless and efficient in my projects. The semantic versioner's module [semver](https://github.com/npm/node-semver) inspired me a lot while writing this module. Hoping that developers will have more content to compare calendar versioning and semantic versioning and know that semantic versioning is not an only versioning standart.
+I wrote this module to do calendar versioning seamless and efficient in my projects. The semantic versioner's module [semver](https://github.com/npm/node-semver) inspired me a lot while writing this module. Hoping that developers will have more content to compare calendar versioning and semantic versioning and know that semantic versioning is not the only versioning standart.
 
 ## Install
 ```sh
@@ -16,29 +16,32 @@ npm i calver
 ```
 
 ## Use
-Decide your format and you'r good to to.
+Decide your format and you'r good to to:
 ```js
 // get Calver prototype object
 const Calver = require('calver')
 
-// initiate a new versioner by specifiying a format and optional version
+// initiate a new versioner by specifiying a format and a version
 const calver = new Calver('YY.MM.MICRO', '19.12.3')
+// version is optional and defaults to current date
 
 // get the current version
 const currentVersion = calver.get() // 19.12.3
 
 // increment the current version
-calver.inc() // calver
+calver.inc()
+// updates date tags to the current date.
 
 // get current version
 calver.get() // 20.5.0 (current year and month, MICRO reset to zero.)
 
+// patches
+calver.inc('micro')
+// now we have 20.5.1 even if you are in a different date
+
 // compare with other version strings in the same format
 calver.gt('20.4') // true
 calver.lt('21.0') // true
-
-// convert calver version into a semver parsable format
-calver.toSemver() // 20.5.0
 ```
 
 ### Helper Methods
@@ -69,7 +72,7 @@ You can create your versioning scheme according to the following format tags:
 11. **MICRO**
 The separator is **.** (dot).
 
-The meanings of the tags are obvious and you can check them on calver.org.
+The meaning of the tags are available on calver.org.
 
 ## Notes
 I would like extend the API as it be used by more developers. Current state of the API is enough for me. Let me know if you need more methods or functionality.
