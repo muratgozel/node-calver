@@ -8,6 +8,7 @@ function Calver(format, initialVersion) {
   this.hasSemanticTag = null
   this.validateFormat(format)
 
+  this.semanticTags = []
   this.value = null
   if (typeof initialVersion == 'string' && initialVersion.length > 0) this.parse(initialVersion)
   else this.createInitialVersion()
@@ -44,6 +45,11 @@ Calver.prototype.inc = function inc(semanticTag = null) {
     }
     return memo
   }.bind(this), {})
+
+  // in favor of https://github.com/muratgozel/node-calver/issues/2
+  if (isDateTagChanged === false && this.semanticTags.length === 1) {
+    return this.inc(this.semanticTags[0])
+  }
 
   return this
 }
@@ -185,6 +191,10 @@ Calver.prototype.createInitialVersion = function createInitialVersion() {
     memo[tag] = self.getTagDefaultValue(tag)
     return memo
   }, {})
+
+  self.semanticTags = formattags.filter(function(t) {
+    return self.validSemanticTags.indexOf(t) !== -1
+  })
 
   return self
 }

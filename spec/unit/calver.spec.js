@@ -43,10 +43,10 @@ describe('Basic functionality.', function() {
     expect(calver3.get()).toBe(version3)
     calver3.inc()
     expect(calver3.get()).toBe(version3)
-/*
-    const calver4 = new Calver('YY.MM')
-    calver4.inc()
-    expect(calver4.get()).toBe('20.08')*/
+
+    const calver4 = new Calver('YY.MM.MINOR', '20.7.0')
+    calver4.inc('minor')
+    expect(calver4.get()).toBe('20.7.1')
   })
 
   it('cleans the given input.', function() {
@@ -57,9 +57,18 @@ describe('Basic functionality.', function() {
 
   it('increments the version.', function() {
     const calver2 = new Calver('YY.MM.MINOR')
+    const currentVersion = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0'
+    const nextVersion = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.1'
+    expect(calver2.get()).toBe(currentVersion)
     calver2.inc()
-    const nextVersion = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0'
     expect(calver2.get()).toBe(nextVersion)
+
+    const calver3 = new Calver('YY.MM.MAJOR.MICRO')
+    const currentVersion2 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0.0'
+    const nextVersion2 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0.0'
+    expect(calver3.get()).toBe(currentVersion2)
+    calver2.inc()
+    expect(calver3.get()).toBe(nextVersion2)
   })
 
   it('checks if the given version is greater.', function() {
