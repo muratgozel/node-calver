@@ -42,7 +42,8 @@ describe('Basic functionality.', function() {
     const version3 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0'
     expect(calver3.get()).toBe(version3)
     calver3.inc()
-    expect(calver3.get()).toBe(version3)
+    const version4 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.1'
+    expect(calver3.get()).toBe(version4)
 
     const calver4 = new Calver('YY.MM.MINOR', '20.7.0')
     calver4.inc('minor')
@@ -69,6 +70,10 @@ describe('Basic functionality.', function() {
     expect(calver3.get()).toBe(currentVersion2)
     calver2.inc()
     expect(calver3.get()).toBe(nextVersion2)
+
+    const calver4 = new Calver('YYYY.MM.MICRO', '2020.12.5')
+    calver4.inc()
+    expect(calver4.get()).toBe('2020.12.6')
   })
 
   it('checks if the given version is greater.', function() {

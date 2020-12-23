@@ -137,6 +137,10 @@ Calver.prototype.parse = function parse(str) {
     return memo
   }, {})
 
+  self.semanticTags = formattags.filter(function(t) {
+    return self.validSemanticTags.indexOf(t) !== -1
+  })
+
   return self
 }
 
