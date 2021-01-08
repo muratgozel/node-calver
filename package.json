@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/muratgozel/node-calver#readme",
   "devDependencies": {
+    "jasmine": "^3.6.3",
     "yargs": "^15.3.1"
   }
 }

@@ -14,41 +14,44 @@ function Calver(format, initialVersion) {
   else this.createInitialVersion()
 }
 
-Calver.prototype.inc = function inc(semanticTag = null) {
+Calver.prototype.inc = function inc(semanticTag = null, updateDate = false) {
   if (typeof semanticTag == 'string') semanticTag = semanticTag.toUpperCase()
 
-  if (typeof semanticTag == 'string' && this.validSemanticTags.indexOf(semanticTag) !== -1) {
+  let isDateTagChanged = false
+
+  if(updateDate || semanticTag === null ) {
+    this.value = Object.keys(this.value).reduce(function (memo, tag) {
+      if (this.validDateTags.indexOf(tag) !== -1) {
+        const v = this.getTagDefaultValue(tag)
+        if (v != this.value[tag] && isDateTagChanged === false) isDateTagChanged = true
+        memo[tag] = v
+      } else {
+        memo[tag] = isDateTagChanged === true ? 0 : this.value[tag]
+      }
+      return memo
+    }.bind(this), {})
+  }
+
+  if(isDateTagChanged){
+    this.semanticTags.forEach(tag=> this.value[tag] = 0)
+  }else if (typeof semanticTag == 'string' && this.validSemanticTags.indexOf(semanticTag) !== -1) {
     if (!this.hasSemanticTag || !this.value.hasOwnProperty(semanticTag)) throw new Error('Couldn\'t increment semantic tag '+semanticTag+' because version doesn\'t have such tag.')
 
     this.value[semanticTag] = parseInt(this.value[semanticTag]) + 1
 
     const semanticInd = this.validSemanticTags.indexOf(semanticTag)
     if (semanticInd < this.validSemanticTags.length - 1) {
-      for (let i = semanticInd + 1; i < this.validSemanticTags.length - 1; i++) {
+      for (let i = semanticInd + 1; i < this.validSemanticTags.length; i++) {
         const nextSemanticTag = this.validSemanticTags[i]
         if (this.value.hasOwnProperty(nextSemanticTag)) this.value[nextSemanticTag] = 0
       }
     }
-
-    return this
+    isDateTagChanged=true
   }
 
-  let isDateTagChanged = false
-  this.value = Object.keys(this.value).reduce(function(memo, tag) {
-    if (this.validDateTags.indexOf(tag) !== -1) {
-      const v = this.getTagDefaultValue(tag)
-      if (v != this.value[tag] && isDateTagChanged === false) isDateTagChanged = true
-      memo[tag] = v
-    }
-    else {
-      memo[tag] = isDateTagChanged === true ? 0 : this.value[tag]
-    }
-    return memo
-  }.bind(this), {})
-
   // in favor of https://github.com/muratgozel/node-calver/issues/2
-  if (isDateTagChanged === false && this.semanticTags.length === 1) {
-    return this.inc(this.semanticTags[0])
+  if (isDateTagChanged === false) {
+    return this.inc(this.semanticTags[this.semanticTags.length - 1])
   }
 
   return this
@@ -155,33 +158,24 @@ Calver.prototype.matchTagValue = function matchTagValue(tag, val) {
   switch (tag) {
     case 'YYYY':
       return /[0-9]{4}/g.test(val) === true && val.length === 4 ? val : undefined
-    break;
     case 'YY':
       return /[0-9]{1,3}/g.test(val) === true && val.length >= 1 && val.length <= 3 ? val : undefined
-    break;
     case 'MM':
       return validMonthValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    break;
     case '0M':
       return validMonthValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    break;
     case 'WW':
       return validWeekValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    break;
     case '0W':
       return validWeekValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    break;
     case 'DD':
       return validDayValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    break;
     case '0D':
       return validDayValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    break;
     case 'MAJOR':
     case 'MINOR':
     case 'MICRO':
       return parseInt(val) >= 0 ? val : undefined
-    break;
     default:
       return undefined
   }
@@ -204,46 +198,38 @@ Calver.prototype.createInitialVersion = function createInitialVersion() {
 }
 
 Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
-  const fullyear = this.now.getFullYear()
+  const fullyear = this.now.getUTCFullYear()
 
   switch (tag) {
     case 'YYYY':
       return fullyear;
-    break;
     case 'YY':
       return parseInt(fullyear.toString().slice(1))
-    break;
     case 'MM':
-      return this.now.getMonth() + 1
-    break;
+      return this.now.getUTCMonth() + 1
     case '0M':
-      const m = this.now.getMonth() + 1
+      const m = this.now.getUTCMonth() + 1
       return (m < 10 ? '0' + m : m).toString()
-    break;
     case 'WW':
       return this.getWeekNumber(this.now, {zeroPadded: false})
-    break;
     case '0W':
       return this.getWeekNumber(this.now, {zeroPadded: true})
-    break;
     case 'DD':
-      return this.now.getDate()
-    break;
+      return this.now.getUTCDate()
     case '0D':
-      const day = now.getDate();
+      const day = now.getUTCDate();
       return (day < 10 ? '0' + day : day).toString()
-    break;
-    case 'MAJOR': return 0; break;
-    case 'MINOR': return 0; break;
-    case 'MICRO': return 0; break;
+    case 'MAJOR': return 0;
+    case 'MINOR': return 0;
+    case 'MICRO': return 0;
     default:
       throw new Error('There is no such tag called '+tag+' supported by node-calver.')
   }
 }
 
 Calver.prototype.getWeekNumber = function getWeekNumber(date, opts = {zeroPadded: false}) {
-  const onejan = new Date(date.getFullYear(), 0, 1)
-  const number = Math.ceil( (((date - onejan) / 86400000) + onejan.getDay() + 1) / 7 )
+  const onejan = new Date(date.getUTCFullYear(), 0, 1)
+  const number = Math.ceil( (((date - onejan) / 86400000) + onejan.getUTCDay() + 1) / 7 )
   return opts.zeroPadded && number < 10 ?
     '0' + number :
     opts.zeroPadded === true ?
