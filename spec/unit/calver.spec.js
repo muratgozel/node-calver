@@ -48,6 +48,11 @@ describe('Basic functionality.', function() {
     const calver4 = new Calver('YY.MM.MINOR', `${year}.${month}.0`)
     calver4.inc('minor')
     expect(calver4.get()).toBe(`${year}.${month}.1`)
+
+    const calver5 = new Calver('YY.MM.MINOR', '20.5.1')
+    expect(calver5.get()).toBe('20.5.1')
+    calver4.inc('minor', true)
+    expect(calver4.get()).toBe(`${year}.${month}.2`)
   })
 
   it('cleans the given input.', function() {
@@ -78,6 +83,8 @@ describe('Basic functionality.', function() {
     expect(calver3.get()).toBe(nextVersionMajor)
 
     const calver4 = new Calver('YYYY.MM.MICRO', '2020.12.5')
+    calver4.inc('micro', true)
+    expect(calver4.get()).toBe('2020.12.6')
     calver4.inc('micro')
     expect(calver4.get()).toBe(`${now.getUTCFullYear()}.${now.getUTCMonth()+1}.0`)
     calver4.inc()
