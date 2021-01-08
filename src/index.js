@@ -157,33 +157,24 @@ Calver.prototype.matchTagValue = function matchTagValue(tag, val) {
   switch (tag) {
     case 'YYYY':
       return /[0-9]{4}/g.test(val) === true && val.length === 4 ? val : undefined
-    break;
     case 'YY':
       return /[0-9]{1,3}/g.test(val) === true && val.length >= 1 && val.length <= 3 ? val : undefined
-    break;
     case 'MM':
       return validMonthValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    break;
     case '0M':
       return validMonthValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    break;
     case 'WW':
       return validWeekValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    break;
     case '0W':
       return validWeekValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    break;
     case 'DD':
       return validDayValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    break;
     case '0D':
       return validDayValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    break;
     case 'MAJOR':
     case 'MINOR':
     case 'MICRO':
       return parseInt(val) >= 0 ? val : undefined
-    break;
     default:
       return undefined
   }
@@ -211,33 +202,25 @@ Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
   switch (tag) {
     case 'YYYY':
       return fullyear;
-    break;
     case 'YY':
       return parseInt(fullyear.toString().slice(1))
-    break;
     case 'MM':
       return this.now.getUTCMonth() + 1
-    break;
     case '0M':
       const m = this.now.getUTCMonth() + 1
       return (m < 10 ? '0' + m : m).toString()
-    break;
     case 'WW':
       return this.getWeekNumber(this.now, {zeroPadded: false})
-    break;
     case '0W':
       return this.getWeekNumber(this.now, {zeroPadded: true})
-    break;
     case 'DD':
       return this.now.getUTCDate()
-    break;
     case '0D':
       const day = now.getUTCDate();
       return (day < 10 ? '0' + day : day).toString()
-    break;
-    case 'MAJOR': return 0; break;
-    case 'MINOR': return 0; break;
-    case 'MICRO': return 0; break;
+    case 'MAJOR': return 0;
+    case 'MINOR': return 0;
+    case 'MICRO': return 0;
     default:
       throw new Error('There is no such tag called '+tag+' supported by node-calver.')
   }
