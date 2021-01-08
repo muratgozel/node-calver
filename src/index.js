@@ -24,7 +24,7 @@ Calver.prototype.inc = function inc(semanticTag = null) {
 
     const semanticInd = this.validSemanticTags.indexOf(semanticTag)
     if (semanticInd < this.validSemanticTags.length - 1) {
-      for (let i = semanticInd + 1; i < this.validSemanticTags.length - 1; i++) {
+      for (let i = semanticInd + 1; i < this.validSemanticTags.length; i++) {
         const nextSemanticTag = this.validSemanticTags[i]
         if (this.value.hasOwnProperty(nextSemanticTag)) this.value[nextSemanticTag] = 0
       }
