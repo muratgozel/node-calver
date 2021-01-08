@@ -204,7 +204,7 @@ Calver.prototype.createInitialVersion = function createInitialVersion() {
 }
 
 Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
-  const fullyear = this.now.getFullYear()
+  const fullyear = this.now.getUTCFullYear()
 
   switch (tag) {
     case 'YYYY':
@@ -214,10 +214,10 @@ Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
       return parseInt(fullyear.toString().slice(1))
     break;
     case 'MM':
-      return this.now.getMonth() + 1
+      return this.now.getUTCMonth() + 1
     break;
     case '0M':
-      const m = this.now.getMonth() + 1
+      const m = this.now.getUTCMonth() + 1
       return (m < 10 ? '0' + m : m).toString()
     break;
     case 'WW':
@@ -227,10 +227,10 @@ Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
       return this.getWeekNumber(this.now, {zeroPadded: true})
     break;
     case 'DD':
-      return this.now.getDate()
+      return this.now.getUTCDate()
     break;
     case '0D':
-      const day = now.getDate();
+      const day = now.getUTCDate();
       return (day < 10 ? '0' + day : day).toString()
     break;
     case 'MAJOR': return 0; break;
@@ -242,8 +242,8 @@ Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
 }
 
 Calver.prototype.getWeekNumber = function getWeekNumber(date, opts = {zeroPadded: false}) {
-  const onejan = new Date(date.getFullYear(), 0, 1)
-  const number = Math.ceil( (((date - onejan) / 86400000) + onejan.getDay() + 1) / 7 )
+  const onejan = new Date(date.getUTCFullYear(), 0, 1)
+  const number = Math.ceil( (((date - onejan) / 86400000) + onejan.getUTCDay() + 1) / 7 )
   return opts.zeroPadded && number < 10 ?
     '0' + number :
     opts.zeroPadded === true ?
