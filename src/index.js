@@ -49,8 +49,8 @@ Calver.prototype.inc = function inc(semanticTag = null, preserveDate = false) {
   }
 
   // in favor of https://github.com/muratgozel/node-calver/issues/2
-  if (isDateTagChanged === false && this.semanticTags.length === 1) {
-    return this.inc(this.semanticTags[0])
+  if (isDateTagChanged === false) {
+    return this.inc(this.semanticTags[this.semanticTags.length - 1])
   }
 
   return this

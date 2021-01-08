@@ -71,8 +71,8 @@ describe('Basic functionality.', function() {
 
     const calver3 = new Calver('YY.MM.MAJOR.MICRO')
     const currentVersion2 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0.0'
-    const nextVersion2 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0.0'
-    const nextVersionMicro = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0.1'
+    const nextVersion2 = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0.1'
+    const nextVersionMicro = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.0.2'
     const nextVersionMajor = now.getFullYear().toString().slice(2) + '.' + (now.getMonth() + 1).toString() + '.1.0'
     expect(calver3.get()).toBe(currentVersion2)
     calver3.inc()
