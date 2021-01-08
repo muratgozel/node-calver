@@ -17,22 +17,6 @@ function Calver(format, initialVersion) {
 Calver.prototype.inc = function inc(semanticTag = null) {
   if (typeof semanticTag == 'string') semanticTag = semanticTag.toUpperCase()
 
-  if (typeof semanticTag == 'string' && this.validSemanticTags.indexOf(semanticTag) !== -1) {
-    if (!this.hasSemanticTag || !this.value.hasOwnProperty(semanticTag)) throw new Error('Couldn\'t increment semantic tag '+semanticTag+' because version doesn\'t have such tag.')
-
-    this.value[semanticTag] = parseInt(this.value[semanticTag]) + 1
-
-    const semanticInd = this.validSemanticTags.indexOf(semanticTag)
-    if (semanticInd < this.validSemanticTags.length - 1) {
-      for (let i = semanticInd + 1; i < this.validSemanticTags.length; i++) {
-        const nextSemanticTag = this.validSemanticTags[i]
-        if (this.value.hasOwnProperty(nextSemanticTag)) this.value[nextSemanticTag] = 0
-      }
-    }
-
-    return this
-  }
-
   let isDateTagChanged = false
   this.value = Object.keys(this.value).reduce(function(memo, tag) {
     if (this.validDateTags.indexOf(tag) !== -1) {
@@ -45,6 +29,23 @@ Calver.prototype.inc = function inc(semanticTag = null) {
     }
     return memo
   }.bind(this), {})
+
+  if(isDateTagChanged){
+    this.semanticTags.forEach(tag=> this.value[tag] = 0)
+  }else if (typeof semanticTag == 'string' && this.validSemanticTags.indexOf(semanticTag) !== -1) {
+    if (!this.hasSemanticTag || !this.value.hasOwnProperty(semanticTag)) throw new Error('Couldn\'t increment semantic tag '+semanticTag+' because version doesn\'t have such tag.')
+
+    this.value[semanticTag] = parseInt(this.value[semanticTag]) + 1
+
+    const semanticInd = this.validSemanticTags.indexOf(semanticTag)
+    if (semanticInd < this.validSemanticTags.length - 1) {
+      for (let i = semanticInd + 1; i < this.validSemanticTags.length; i++) {
+        const nextSemanticTag = this.validSemanticTags[i]
+        if (this.value.hasOwnProperty(nextSemanticTag)) this.value[nextSemanticTag] = 0
+      }
+    }
+    isDateTagChanged=true
+  }
 
   // in favor of https://github.com/muratgozel/node-calver/issues/2
   if (isDateTagChanged === false && this.semanticTags.length === 1) {
