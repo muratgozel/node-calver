@@ -14,11 +14,12 @@ function Calver(format, initialVersion) {
   else this.createInitialVersion()
 }
 
-Calver.prototype.inc = function inc(semanticTag = null, preserveDate = false) {
+Calver.prototype.inc = function inc(semanticTag = null, updateDate = false) {
   if (typeof semanticTag == 'string') semanticTag = semanticTag.toUpperCase()
 
   let isDateTagChanged = false
-  if(!preserveDate) {
+
+  if(updateDate || semanticTag === null ) {
     this.value = Object.keys(this.value).reduce(function (memo, tag) {
       if (this.validDateTags.indexOf(tag) !== -1) {
         const v = this.getTagDefaultValue(tag)
