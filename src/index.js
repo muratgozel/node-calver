@@ -1,240 +1,170 @@
-function Calver(format, initialVersion) {
-  this.validDateTags = ['YYYY', 'YY', '0Y', 'MM', '0M', 'WW', '0W', 'DD', '0D']
-  this.validSemanticTags = ['MAJOR', 'MINOR', 'MICRO'] // TODO add MODIFIER
-  this.reVersionMatcher = /[0-9]+([0-9.]+)?/g
-  this.now = new Date()
+const createDateVersion = require('./domain/datever')
+const createSemanticVersion = require('./domain/semver')
 
-  this.format = null
-  this.hasSemanticTag = null
-  this.validateFormat(format)
-
-  this.semanticTags = []
-  this.value = null
-  if (typeof initialVersion == 'string' && initialVersion.length > 0) this.parse(initialVersion)
-  else this.createInitialVersion()
-}
-
-Calver.prototype.inc = function inc(semanticTag = null, updateDate = false) {
-  if (typeof semanticTag == 'string') semanticTag = semanticTag.toUpperCase()
-
-  let isDateTagChanged = false
-
-  if(updateDate || semanticTag === null ) {
-    this.value = Object.keys(this.value).reduce(function (memo, tag) {
-      if (this.validDateTags.indexOf(tag) !== -1) {
-        const v = this.getTagDefaultValue(tag)
-        if (v != this.value[tag] && isDateTagChanged === false) isDateTagChanged = true
-        memo[tag] = v
-      } else {
-        memo[tag] = isDateTagChanged === true ? 0 : this.value[tag]
-      }
-      return memo
-    }.bind(this), {})
+function Calver() {
+  const tags = {
+    date: ['YYYY', 'YY', '0Y', 'MM', '0M', 'WW', '0W', 'DD', '0D'],
+    semantic: ['MAJOR', 'MINOR', 'MICRO', 'MODIFIER'],
+    modifier: ['DEV', 'ALPHA', 'BETA', 'RC']
+  }
+  const levels = ['CALENDAR', 'MAJOR', 'MINOR', 'MICRO', 'DEV', 'ALPHA', 'BETA', 'RC']
+  const date = {
+    now: new Date(Date.now())
   }
 
-  if(isDateTagChanged){
-    this.semanticTags.forEach(tag=> this.value[tag] = 0)
-  }else if (typeof semanticTag == 'string' && this.validSemanticTags.indexOf(semanticTag) !== -1) {
-    if (!this.hasSemanticTag || !this.value.hasOwnProperty(semanticTag)) throw new Error('Couldn\'t increment semantic tag '+semanticTag+' because version doesn\'t have such tag.')
+  function valid(format, ver) {
+    validateFormat(format)
+    validateVersion(ver, format)
+    return true;
+  }
 
-    this.value[semanticTag] = parseInt(this.value[semanticTag]) + 1
+  function init(format) {
+    format = validateFormat(format, {transformModifiers: false})
 
-    const semanticInd = this.validSemanticTags.indexOf(semanticTag)
-    if (semanticInd < this.validSemanticTags.length - 1) {
-      for (let i = semanticInd + 1; i < this.validSemanticTags.length; i++) {
-        const nextSemanticTag = this.validSemanticTags[i]
-        if (this.value.hasOwnProperty(nextSemanticTag)) this.value[nextSemanticTag] = 0
+    const datever = createDateVersion(format, '', date.now, tags)
+    const semver = createSemanticVersion(format, '', tags)
+
+    const tagssemantic = format.split('.').filter(f => tags.semantic.indexOf(f) !== -1)
+    if (tagssemantic.length > 0) {
+      semver.inc(tagssemantic[0])
+    }
+    const tagsdate = format.split('.').filter(f => tags.date.indexOf(f) !== -1)
+    if (tagsdate.length > 0) {
+      datever.inc('CALENDAR')
+      semver.inc('CALENDAR')
+    }
+    const tagsmodifier = format.split('.').filter(f => tags.modifier.indexOf(f) !== -1)
+    if (tagsmodifier.length > 0) {
+      semver.inc(tagsmodifier[0])
+    }
+
+    return [datever.asString(), semver.asString()].filter(s => s).join('.')
+  }
+
+  function inc(format, ver, level) {
+    format = validateFormat(format)
+    ver = validateVersion(ver, format)
+    level = validateLevel(level, format)
+
+    const datever = createDateVersion(format, ver, date.now, tags)
+    const semver = createSemanticVersion(format, ver, tags)
+
+    const levelsarr = level.split('.')
+    for (let i = 0; i < levelsarr.length; i++) {
+      const l = levelsarr[i]
+      datever.inc(l)
+      semver.inc(l)
+    }
+
+    return [datever.asString(), semver.asString()].filter(s => s).join('.')
+  }
+
+  function validateLevel(level, format) {
+    if (!level)
+      throw new Error('Please specify a valid level.');
+    level = level.trim().toUpperCase()
+    const formatarr = format.split('.')
+    const levelsarr = level.split('.')
+    if (levelsarr.length > 2)
+      throw new Error('You can specify 2 levels at max.');
+    if (!levelsarr)
+      throw new Error('You should specify at least one level.');
+
+    for (var i = 0; i < levelsarr.length; i++) {
+      const l = levelsarr[i]
+      if (levels.indexOf(l) === -1)
+        throw new Error('Invalid level.');
+      if (tags.modifier.indexOf(l) !== -1 && formatarr.indexOf('MODIFIER') === -1)
+        throw new Error('Level and format doesn\'t match.');
+      if (tags.semantic.indexOf(l) !== -1 && formatarr.indexOf(l) === -1)
+        throw new Error('Level and format doesn\'t match.');
+    }
+
+    if (levelsarr.length === 2) {
+      if (tags.modifier.indexOf(levelsarr[0]) !== -1)
+        throw new Error('Place the modifier tag at the end.');
+      if ((tags.semantic.indexOf(levelsarr[0]) !== -1 || levelsarr[0] == 'CALENDAR') &&
+          (tags.modifier.indexOf(levelsarr[1]) === -1))
+        throw new Error('Second level should be a modifier or remove it.');
+    }
+    return level
+  }
+
+  function validateVersion(ver, format) {
+    if (!ver)
+      throw new Error('Please specify a valid version.');
+
+    ver = ver.trim().toLowerCase()
+    if (/[^a-zA-Z0-9.-]/.test(ver) === true)
+      throw new Error('Unexpected characters in your version string.')
+
+    const formatarr = format.split('.')
+    const verarr = ver.split(/[.-]/)
+    if ((formatarr.indexOf('MODIFIER') === -1 && verarr.length < formatarr.length) ||
+        (formatarr.indexOf('MODIFIER') !== -1 && verarr.length + 1 != formatarr.length &&
+          verarr.length - 1 != formatarr.length))
+      throw new Error('Version and format lengths mismatch.');
+
+    return ver
+  }
+
+  function validateFormat(format, opts={transformModifiers: true}) {
+    if (!format)
+      throw new Error('Please specify a valid format.');
+    format = format.trim().toUpperCase().split('.')
+      .map(t =>
+                tags.modifier.indexOf(t) !== -1 && opts.transformModifiers === true
+                  ? 'MODIFIER'
+                  : t)
+      .join('.')
+    const tagsrepo = []
+    const tagsarr = format.split('.')
+    for (let i = 0; i < tagsarr.length; i++) {
+      const t = tagsarr[i].toUpperCase()
+
+      if (tags.date.indexOf(t) === -1 && tags.semantic.indexOf(t) === -1 &&
+          tags.modifier.indexOf(t) === -1)
+        throw new Error('Your format contains invalid tags.');
+
+      if (tagsrepo.indexOf(t) !== -1)
+        throw new Error('Your format is repeating the same tag.')
+      tagsrepo.push(t);
+    }
+
+    const tagsdate = tagsrepo.filter(t => tags.date.indexOf(t) !== -1)
+    let largestDateTagIndex = null
+    if (tagsdate.length > 0) {
+      const tagsdatesorted = tags.date.filter(t => tagsdate.indexOf(t) !== -1)
+      for (let j = 0; j < tagsdatesorted.length; j++) {
+        if (tagsdatesorted[j] != tagsdate[j])
+          throw new Error('Date tags are in the wrong order.');
+        largestDateTagIndex = tagsrepo.indexOf(tagsdate[j])
       }
     }
-    isDateTagChanged=true
+
+    const tagssemantic = tagsrepo.filter(t => tags.semantic.indexOf(t) !== -1)
+    let largestSemanticTagIndex = null
+    if (tagssemantic.length > 0) {
+      const tagssemanticsorted = tags.semantic.filter(t => tagssemantic.indexOf(t) !== -1)
+      for (let k = 0; k < tagssemanticsorted.length; k++) {
+        if (tagssemanticsorted[k] != tagssemantic[k])
+          throw new Error('Semantic tags are in the wrong order.');
+        if (largestSemanticTagIndex === null)
+          largestSemanticTagIndex = tagsrepo.indexOf(tagssemantic[k])
+      }
+    }
+
+    if (largestDateTagIndex !== null && largestSemanticTagIndex !== null &&
+        largestDateTagIndex > largestSemanticTagIndex)
+      throw new Error('Semantic tags should come after date tags.');
+
+    return format
   }
 
-  // in favor of https://github.com/muratgozel/node-calver/issues/2
-  if (isDateTagChanged === false) {
-    return this.inc(this.semanticTags[this.semanticTags.length - 1])
-  }
-
-  return this
-}
-
-Calver.prototype.get = function get() {
-  const self = this
-  return Object.keys(self.value).reduce(function(memo, tag) {
-    memo = memo.concat([self.value[tag]])
-    return memo
-  }, []).join('.')
-}
-
-Calver.prototype.gt = function gt(versionStr) {
-  versionStr = this.clean(versionStr)
-  const ins = new Calver(this.format, versionStr)
-  const tags = this.format.split('.')
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i]
-    const v1 = parseInt(this.value[tag])
-    const v2 = parseInt(ins.value[tag])
-    if (v1 > v2) return true
-    if (v1 < v2) return false
-  }
-  return false
-}
-
-Calver.prototype.lt = function lt(versionStr) {
-  return !this.gt(versionStr)
-}
-
-Calver.prototype.valid = function valid(str, format) {
-  if (typeof str != 'string' || typeof format != 'string')
-    throw new Error('Version and format arguments must be string.')
-
-  try {
-    const ins = new Calver(format, str)
-    return true
-  } catch (e) {
-    return false
+  return {
+    init: init,
+    inc: inc
   }
 }
 
-Calver.prototype.clean = function clean(str) {
-  if (typeof str != 'string') return ''
-  const arr = str.match(this.reVersionMatcher)
-  return arr && arr.length > 0 ? arr[0] : ''
-}
-
-Calver.prototype.validateFormat = function validateFormat(format) {
-  format = format.toUpperCase()
-  const arr = format.split('.')
-  const invalidTags = arr.filter(
-    item => this.validDateTags.indexOf(item) === -1 && this.validSemanticTags.indexOf(item) === -1
-  )
-  if (invalidTags && invalidTags.length > 0)
-    throw new Error('The format you specified contains invalid tags. (' + invalidTags.join(', ') + ')')
-
-  const countDateTags = arr.filter(item => this.validDateTags.indexOf(item) !== -1)
-  if (!countDateTags || countDateTags.length === 0)
-    throw new Error('The format you specified should have at least one date tag.')
-
-  const repeatingTags = arr.filter((tag, i, self) => self.indexOf(tag) !== i)
-  if (repeatingTags && repeatingTags.length > 0)
-    throw new Error('Using the same tag more than once is not allowed.')
-
-  const countSemanticTags = arr.filter(item => this.validSemanticTags.indexOf(item) !== -1)
-  this.hasSemanticTag = countSemanticTags && countSemanticTags.length > 0
-
-  this.format = format
-}
-
-Calver.prototype.parse = function parse(str) {
-  const self = this
-
-  str = self.clean(str)
-  const strtags = str.split('.')
-  const formattags = self.format.split('.')
-  if (formattags.length !== strtags.length)
-    throw new Error('The version string '+str+' doesn\'t match with the format you specified. '+self.format)
-
-  self.value = formattags.reduce(function(memo, tag, i) {
-    memo[tag] = self.matchTagValue(tag, strtags[i])
-    if (memo[tag] === undefined)
-      throw new Error('Invalid value found in version string. The value '+strtags[i]+' is not in the format '+tag)
-    return memo
-  }, {})
-
-  self.semanticTags = formattags.filter(function(t) {
-    return self.validSemanticTags.indexOf(t) !== -1
-  })
-
-  return self
-}
-
-Calver.prototype.matchTagValue = function matchTagValue(tag, val) {
-  if (typeof val == 'number') val = val.toString()
-  if (/[^0-9]/g.test(val) === true) return undefined
-
-  const validMonthValues = Array(12).fill(1).map((item, ind) => ind + 1)
-  const validWeekValues = Array(52).fill(1).map((item, ind) => ind + 1)
-  const validDayValues = Array(31).fill(1).map((item, ind) => ind + 1)
-
-  switch (tag) {
-    case 'YYYY':
-      return /[0-9]{4}/g.test(val) === true && val.length === 4 ? val : undefined
-    case 'YY':
-      return /[0-9]{1,3}/g.test(val) === true && val.length >= 1 && val.length <= 3 ? val : undefined
-    case 'MM':
-      return validMonthValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    case '0M':
-      return validMonthValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    case 'WW':
-      return validWeekValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    case '0W':
-      return validWeekValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    case 'DD':
-      return validDayValues.indexOf(parseInt(val)) !== -1 && val.slice(0, 1) != '0' ? val : undefined
-    case '0D':
-      return validDayValues.indexOf(parseInt(val)) !== -1 && val.length === 2 ? val : undefined
-    case 'MAJOR':
-    case 'MINOR':
-    case 'MICRO':
-      return parseInt(val) >= 0 ? val : undefined
-    default:
-      return undefined
-  }
-}
-
-Calver.prototype.createInitialVersion = function createInitialVersion() {
-  const self = this
-  const formattags = self.format.split('.')
-
-  self.value = formattags.reduce(function(memo, tag, i) {
-    memo[tag] = self.getTagDefaultValue(tag)
-    return memo
-  }, {})
-
-  self.semanticTags = formattags.filter(function(t) {
-    return self.validSemanticTags.indexOf(t) !== -1
-  })
-
-  return self
-}
-
-Calver.prototype.getTagDefaultValue = function getTagDefaultValue(tag) {
-  const fullyear = this.now.getUTCFullYear()
-
-  switch (tag) {
-    case 'YYYY':
-      return fullyear;
-    case 'YY':
-      return parseInt(fullyear.toString().slice(1))
-    case 'MM':
-      return this.now.getUTCMonth() + 1
-    case '0M':
-      const m = this.now.getUTCMonth() + 1
-      return (m < 10 ? '0' + m : m).toString()
-    case 'WW':
-      return this.getWeekNumber(this.now, {zeroPadded: false})
-    case '0W':
-      return this.getWeekNumber(this.now, {zeroPadded: true})
-    case 'DD':
-      return this.now.getUTCDate()
-    case '0D':
-      const day = now.getUTCDate();
-      return (day < 10 ? '0' + day : day).toString()
-    case 'MAJOR': return 0;
-    case 'MINOR': return 0;
-    case 'MICRO': return 0;
-    default:
-      throw new Error('There is no such tag called '+tag+' supported by node-calver.')
-  }
-}
-
-Calver.prototype.getWeekNumber = function getWeekNumber(date, opts = {zeroPadded: false}) {
-  const onejan = new Date(date.getUTCFullYear(), 0, 1)
-  const number = Math.ceil( (((date - onejan) / 86400000) + onejan.getUTCDay() + 1) / 7 )
-  return opts.zeroPadded && number < 10 ?
-    '0' + number :
-    opts.zeroPadded === true ?
-      number.toString() :
-      number
-}
-
-module.exports = Calver
+module.exports = Calver()
