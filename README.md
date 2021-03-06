@@ -120,6 +120,14 @@ try {
 ```
 It will throw since it doesn't have a `minor` tag in its version string.
 
+### Prettify Version
+Print more human readable, pretty versions:
+```js
+const pretty = calver.pretty('yyyy.mm.micro', '2021.3.24')
+const pretty2 = calver.pretty('yyyy.mm.micro', '2021.3.24', 'tr')
+```
+The first one is **March 2021 (24)** and the second one is **Mart 2021 (24)**
+
 ## Tests
 Tests are written in [jasmine](https://jasmine.github.io) and can be run with `npm run test`. You can browse spec folder to see more examples.
 

@@ -116,9 +116,14 @@ module.exports = function createDateVersion(format, ver, now, alltags) {
     return Object.keys(dateversion).map(t => dateversion[t]).join('.')
   }
 
+  function pretty(locale=undefined) {
+    return new Date(asNumeric()).toLocaleString(locale, {year: 'numeric', month: 'long'})
+  }
+
   return {
     inc: inc,
     asString: asString,
-    asNumeric: asNumeric
+    asNumeric: asNumeric,
+    pretty: pretty
   }
 }

@@ -59,6 +59,16 @@ function Calver() {
     return [datever.asString(), semver.asString()].filter(s => s).join('.')
   }
 
+  function pretty(format, ver, locale=undefined) {
+    format = validateFormat(format)
+    ver = validateVersion(ver, format)
+
+    const datever = createDateVersion(format, ver, date.now, tags)
+    const semver = createSemanticVersion(format, ver, tags)
+
+    return datever.pretty(locale) + ' (' + semver.asString() + ')'
+  }
+
   function validateLevel(level, format) {
     if (!level)
       throw new Error('Please specify a valid level.');
@@ -163,7 +173,8 @@ function Calver() {
 
   return {
     init: init,
-    inc: inc
+    inc: inc,
+    pretty: pretty
   }
 }
 
