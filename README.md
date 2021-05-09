@@ -10,16 +10,18 @@ The calver parser for node. Because we love calendar versioning! 📆 🚀
 
 I wrote this module to apply calendar versioning to my frontend projects and it works well. Practically you can use calendar versioning anywhere. The semantic versioner's module [semver](https://github.com/npm/node-semver) inspired me a lot while writing this module. Hoping that developers will have more content to compare calendar versioning and semantic versioning and know that semantic versioning is not the only versioning standart.
 
+There is no dependency.
+
 ## Install
 ```sh
 npm i calver
 ```
 
 ## Before Using
-You may want to look at [calver.org](https://calver.org/) which I used as a reference while implementing this package, to better understand implementing calendar versioning.
+You may want to look at [calver.org](https://calver.org/) which I used as a reference while implementing this package, to better understand how to build calendar versioner.
 
 ### Available Tags
-Here are the list of tags you can use while creating a versioning scheme of your app.
+Here are the list of tags you can choose while creating a versioning scheme of your app.
 
 #### Date Tags
 1. **YYYY**
@@ -45,64 +47,56 @@ Here are the list of tags you can use while creating a versioning scheme of your
 4. **RC**
 
 ## Use
-Let's create an initial release:
+This is an example usage in some application releasing lifecycle.
+
+We want our app's version in the following format: **yy.mm.minor.micro.modifier**
+
+Give your app a version number for the next release:
 ```js
 const calver = require('calver')
 
-const format = 'yy.mm.minor.micro.dev'
-calver.init(format)
+const format = 'yy.mm.minor.micro.modifier'
+calver.inc(format, '21.1.0.0', 'dev')
 ```
-This will return (based on the date you are executing) **21.1.0.0-dev.0**
+This will return **21.1.0.0-dev.1**
 
-After some infrastructural code, maybe:
+When we done the changes and published this version, we can start to work on another update:
 ```js
-calver.inc(format, '21.1.0.0-dev.0', 'dev')
+// format is same and place the previous version number in the second argument
+calver.inc(format, '21.1.0.0-dev.1', 'dev')
 ```
-and we are going to have **21.1.0.0-dev.1**
+And we are now **21.1.0.0-dev.2**
 
-Some time later we may go alpha:
+When it is time to go alpha:
 ```js
-calver.inc(format, '21.1.0.0-dev.1', 'alpha')
+// same logic
+calver.inc(format, '21.1.0.0-dev.2', 'alpha')
 ```
+And we are now alpha: **21.1.0.0-alpha.1**
 
-It is now **21.1.0.0-alpha.0**
-
-Then `beta` and then `rc`. Modifier tags work as shown above. Let's create a release:
+Let's skip `beta` and `rs` tags and create a release version:
 ```js
-calver.inc(format, '21.1.0.0.rc.4', 'minor')
+// same same same
+calver.inc(format, '21.1.0.0-alpha.1', 'minor')
 ```
+And **21.1.1.0**
 
-This will return **21.1.1.0** Note that the date portion never changes except you explicitly specify to. (going to show you below)
+This is how a release cycles.
 
-Made a few bug fixes:
+There is more options related to tags such as you can specify two tags:
 ```js
-calver.inc(format, '21.1.1.0', 'micro')
-calver.inc(format, '21.1.1.1', 'micro')
-calver.inc(format, '21.1.1.2', 'micro')
-calver.inc(format, '21.1.1.3', 'micro')
+// calendar means any calendar tag.
+calver.inc(format, '21.1.1.0', 'calendar.beta')
+// returns 21.1.1.0-beta.1 depending on the current date
+
+// calendar means any calendar tag.
+calver.inc(format, '21.1.1.0', 'minor.beta')
+// returns 21.1.1.0-beta.1
 ```
 
-and we have **21.1.1.4**
+The first parameter **format** is fixed along with the project. It is called **versioning scheme**. You can use tags as written in the list above.
 
-Added new features:
-```js
-calver.inc(format, '21.1.1.4', 'minor')
-```
-
-and we now have **21.1.2.0**
-
-Great. Now let's assume our developer decided to make a calendar release:
-```js
-calver.inc(format, '21.1.2.0', 'calendar.dev')
-```
-
-This will give (in a future date, assuming its April 2021) **21.4.0.0-dev.0**
-
-and the alpha, beta, micro, minor updates... the whole circulation repeats.
-
-The first parameter **format** is fixed along with the project lifetime. It is called **versioning scheme**. You can use tags as written in the list above.
-
-The second parameter **version** is the current user defined value value of the **format**. (and `inc` will give you the next one)
+The second parameter **version** is the current value of the **format**. (and `inc` will give you the next one)
 
 The third parameter **level** explains the majority and purpose of the update.
 1. It can be `calendar` to sync the date portion of the version with the current date.
@@ -123,10 +117,14 @@ It will throw since it doesn't have a `minor` tag in its version string.
 ### Prettify Version
 Print more human readable, pretty versions:
 ```js
-const pretty = calver.pretty('yyyy.mm.micro', '2021.3.24')
+// month names are in english by default
+const pretty = calver.pretty('yyyy.mm.micro', '2021.3.24', 'en')
+// based on turkish
 const pretty2 = calver.pretty('yyyy.mm.micro', '2021.3.24', 'tr')
+// with modifier tags
+const pretty3 = calver.pretty('yy.mm.micro.modifier', '21.3.4-alpha.1')
 ```
-The first one is **March 2021 (24)** and the second one is **Mart 2021 (24)**
+The first one is **March 2021 v24**, the second one is **Mart 2021 v24** and the third one is **March 2021 v4-alpha.1**
 
 ## Tests
 Tests are written in [jasmine](https://jasmine.github.io) and can be run with `npm run test`. You can browse spec folder to see more examples.

@@ -33,11 +33,17 @@ describe('inc', function() {
     expect(() => calver.inc('yy.0m.dd.minor.micro', '21.01.19.0.0', 'calendar')).toThrow()
   })
 
-  it('calver + modifier tags.', function() {
+  it('modifier tags.', function() {
     expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.1.2-alpha.0', 'alpha')).toBe('20.4.1.2-alpha.1')
     expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.1.2-alpha.1', 'minor')).toBe('20.4.2.0')
-    expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.2.0', 'alpha')).toBe('20.4.2.0-alpha.0')
+    expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.2.0', 'alpha')).toBe('20.4.2.0-alpha.1')
     expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.2.0-alpha.0', 'alpha')).toBe('20.4.2.0-alpha.1')
-    expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.2.0-alpha.1', 'beta')).toBe('20.4.2.0-beta.0')
+    expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.2.0-alpha.1', 'beta')).toBe('20.4.2.0-beta.1')
+    expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.2.0', 'beta')).toBe('20.4.2.0-beta.1')
+  })
+
+  it('date + modifier tags.', function() {
+    expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.1.2-alpha.1', 'calendar.alpha')).toBe('21.1.0.0-alpha.1')
+    expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.1.2-alpha.1', 'micro.alpha')).toBe('20.4.1.3-alpha.1')
   })
 })

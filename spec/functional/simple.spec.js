@@ -1,22 +1,22 @@
 describe('Simple app', function() {
-  const format = 'yy.mm.minor.micro.dev'
+  const format = 'yy.mm.minor.micro.modifier'
 
   it('creates its initial version.', function() {
-    expect(calver.init(format)).toBe('21.1.0.0-dev.0')
+    expect(calver.init(format)).toBe('21.1.0.0')
   })
 
   it('increments dev tag two times', function() {
-    expect(calver.inc(format, '21.1.0.0-dev.0', 'dev')).toBe('21.1.0.0-dev.1')
+    expect(calver.inc(format, '21.1.0.0', 'dev')).toBe('21.1.0.0-dev.1')
     expect(calver.inc(format, '21.1.0.0-dev.1', 'dev')).toBe('21.1.0.0-dev.2')
   })
 
   it('goes alpha', function() {
-    expect(calver.inc(format, '21.1.0.0-dev.2', 'alpha')).toBe('21.1.0.0-alpha.0')
+    expect(calver.inc(format, '21.1.0.0-dev.2', 'alpha')).toBe('21.1.0.0-alpha.1')
   })
 
   it('goes beta and rc', function() {
-    expect(calver.inc(format, '21.1.0.0-alpha.0', 'beta')).toBe('21.1.0.0-beta.0')
-    expect(calver.inc(format, '21.1.0.0-beta.0', 'rc')).toBe('21.1.0.0-rc.0')
+    expect(calver.inc(format, '21.1.0.0-alpha.0', 'beta')).toBe('21.1.0.0-beta.1')
+    expect(calver.inc(format, '21.1.0.0-beta.0', 'rc')).toBe('21.1.0.0-rc.1')
     expect(calver.inc(format, '21.1.0.0-rc.0', 'rc')).toBe('21.1.0.0-rc.1')
     expect(calver.inc(format, '21.1.0.0-rc.1', 'rc')).toBe('21.1.0.0-rc.2')
     expect(calver.inc(format, '21.1.0.0-rc.2', 'rc')).toBe('21.1.0.0-rc.3')
@@ -39,6 +39,6 @@ describe('Simple app', function() {
   })
 
   it('decided to make a calendar release', function() {
-    expect(calver.inc(format, '20.1.2.0', 'calendar.dev')).toBe('21.1.0.0-dev.0')
+    expect(calver.inc(format, '20.1.2.0', 'calendar.dev')).toBe('21.1.0.0-dev.1')
   })
 })

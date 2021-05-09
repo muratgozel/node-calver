@@ -23,8 +23,11 @@ module.exports = function createSemanticVersion(format, ver, alltags) {
       const isLevelChanged = semversion.MODIFIER.split('.')[0].toUpperCase() != level
       const mv = semversion.MODIFIER.split('.')[1]
       semversion.MODIFIER = level.toLowerCase() + '.' +
-        (semversion.MODIFIER == 'modifier.0' ? '0' :
-        (isLevelChanged ? '0' : (parseInt(mv) + 1)))
+        (
+          semversion.MODIFIER == 'modifier.0'
+            ? '1'
+            : (isLevelChanged ? '1' : (parseInt(mv) + 1))
+        )
     }
 
     if (['MAJOR', 'MINOR', 'MICRO'].indexOf(level) !== -1) {
@@ -39,6 +42,7 @@ module.exports = function createSemanticVersion(format, ver, alltags) {
     }
 
     if ('CALENDAR' == level) {
+      semversion.MODIFIER = ''
       if (semversion.hasOwnProperty('MICRO')) semversion.MICRO = '0'
       if (semversion.hasOwnProperty('MINOR')) semversion.MINOR = '0'
       if (semversion.hasOwnProperty('MAJOR')) semversion.MAJOR = '0'
@@ -49,7 +53,7 @@ module.exports = function createSemanticVersion(format, ver, alltags) {
     return Object.keys(semversion)
       .filter(t => semversion[t] && t != 'MODIFIER')
       .map(t => semversion[t]).join('.')
-      + (semversion.MODIFIER ? '-' + semversion.MODIFIER : '')
+      + (semversion.MODIFIER && semversion.MODIFIER != 'modifier.0' ? '-' + semversion.MODIFIER : '')
   }
 
   return {

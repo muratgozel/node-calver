@@ -66,7 +66,16 @@ function Calver() {
     const datever = createDateVersion(format, ver, date.now, tags)
     const semver = createSemanticVersion(format, ver, tags)
 
-    return datever.pretty(locale) + ' (' + semver.asString() + ')'
+    return datever.pretty(locale) + ' v' + semver.asString() + ''
+  }
+
+  function getTagType(input) {
+    input = input.toUpperCase()
+
+    if (tags.date.indexOf(input) !== -1) return 'date'
+    else if (tags.semantic.indexOf(input) !== -1) return 'semantic'
+    else if (tags.modifier.indexOf(input) !== -1) return 'modifier'
+    else return ''
   }
 
   function validateLevel(level, format) {
@@ -174,7 +183,8 @@ function Calver() {
   return {
     init: init,
     inc: inc,
-    pretty: pretty
+    pretty: pretty,
+    getTagType: getTagType
   }
 }
 

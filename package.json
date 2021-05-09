@@ -1,6 +1,6 @@
 {
   "name": "calver",
-  "version": "21.1.1",
+  "version": "21.1.2",
   "description": "The calver parser for node. Because we love calendar versioning! 💙🎈",
   "main": "src/index.js",
   "scripts": {
@@ -28,7 +28,7 @@
   "homepage": "https://github.com/muratgozel/node-calver#readme",
   "devDependencies": {
     "colors": "^1.4.0",
-    "jasmine": "^3.6.4",
+    "jasmine": "^3.7.0",
     "yargs": "^16.2.0"
   }
 }
