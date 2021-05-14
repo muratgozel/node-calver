@@ -107,7 +107,7 @@ The third parameter **level** explains the majority and purpose of the update.
 You may want to validate a version string against a format:
 ```js
 try {
-  calver.valid('yyyy.mm.minor.modifier', '2021.5-alpha.1', 'minor')
+  calver.valid('yyyy.mm.minor.modifier', '2021.5-alpha.1')
 } catch (e) {
 
 }
