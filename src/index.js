@@ -13,8 +13,13 @@ function Calver() {
   }
 
   function valid(format, ver) {
+    format = format.toUpperCase()
+
     validateFormat(format)
     validateVersion(ver, format)
+    createDateVersion(format, ver, date.now, tags)
+    createSemanticVersion(format, ver, tags)
+    
     return true;
   }
 
@@ -184,7 +189,7 @@ function Calver() {
     init: init,
     inc: inc,
     pretty: pretty,
-    getTagType: getTagType
+    getTagType: getTagType,
     valid: valid
   }
 }
