@@ -185,6 +185,7 @@ function Calver() {
     inc: inc,
     pretty: pretty,
     getTagType: getTagType
+    valid: valid
   }
 }
 
