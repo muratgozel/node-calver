@@ -19,7 +19,7 @@ function Calver() {
     validateVersion(ver, format)
     createDateVersion(format, ver, date.now, tags)
     createSemanticVersion(format, ver, tags)
-    
+
     return true;
   }
 
@@ -54,11 +54,13 @@ function Calver() {
     const datever = createDateVersion(format, ver, date.now, tags)
     const semver = createSemanticVersion(format, ver, tags)
 
+    let dateUpdated = false
     const levelsarr = level.split('.')
     for (let i = 0; i < levelsarr.length; i++) {
       const l = levelsarr[i]
-      datever.inc(l)
-      semver.inc(l)
+      const updated = datever.inc(l, levelsarr.length > 1)
+      if (l == 'CALENDAR') dateUpdated = updated
+      semver.inc(l, dateUpdated)
     }
 
     return [datever.asString(), semver.asString()].filter(s => s).join('.')
@@ -104,13 +106,6 @@ function Calver() {
         throw new Error('Level and format doesn\'t match.');
     }
 
-    if (levelsarr.length === 2) {
-      if (tags.modifier.indexOf(levelsarr[0]) !== -1)
-        throw new Error('Place the modifier tag at the end.');
-      if ((tags.semantic.indexOf(levelsarr[0]) !== -1 || levelsarr[0] == 'CALENDAR') &&
-          (tags.modifier.indexOf(levelsarr[1]) === -1))
-        throw new Error('Second level should be a modifier or remove it.');
-    }
     return level
   }
 

@@ -85,13 +85,12 @@ This is how a release cycles.
 
 There is more options related to tags such as you can specify two tags:
 ```js
-// calendar means any calendar tag.
-calver.inc(format, '21.1.1.0', 'calendar.beta')
-// returns 21.1.1.0-beta.1 depending on the current date
+// calendar means update date portion to today.
+calver.inc(format, '19.1.1.0', 'calendar.beta')
+// returns 21.1.0.0-beta.1 depending on the current date
 
-// calendar means any calendar tag.
 calver.inc(format, '21.1.1.0', 'minor.beta')
-// returns 21.1.1.0-beta.1
+// returns 21.1.2.0-beta.1
 ```
 
 The first parameter **format** is fixed along with the project. It is called **versioning scheme**. You can use tags as written in the list above.
@@ -101,7 +100,7 @@ The second parameter **version** is the current value of the **format**. (and `i
 The third parameter **level** explains the majority and purpose of the update.
 1. It can be `calendar` to sync the date portion of the version with the current date.
 2. It can be one of `major`, `minor` and `micro` to update the semantic portion of the version.
-3. It can have two tags while the first one is one of the two above and the second one is a modifier. `calendar.alpha`, `minor.beta` for example.
+3. It can have two tags while the first one is one of the two above and the second one is either modifier or semantic. `calendar.alpha`, `minor.beta`, `calendar.micro` for example.
 
 ### Validate Versions
 You may want to validate a version string against a format:

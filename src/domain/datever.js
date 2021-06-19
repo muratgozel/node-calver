@@ -96,7 +96,7 @@ module.exports = function createDateVersion(format, ver, now, alltags) {
     return Date.UTC(getYear(), getMonth(), getDay())
   }
 
-  function inc(level) {
+  function inc(level, multipleLevels=false) {
     if (updated === false && alltags.modifier.indexOf(level) !== -1) updated = true
     if (level != 'CALENDAR') return;
 
@@ -107,11 +107,17 @@ module.exports = function createDateVersion(format, ver, now, alltags) {
       if (dateversion[t] != lv) updated = true
       dateversion[t] = lv
     }
+
+    if (updated === false && multipleLevels === false) {
+      throw new Error('There is no change in the version.')
+    }
+
+    return updated
   }
 
   function asString() {
-    if (updated === false && verarr.length > 0)
-      throw new Error('There is no change in the version.');
+    //if (updated === false && verarr.length > 0)
+      //throw new Error('There is no change in the version.');
 
     return Object.keys(dateversion).map(t => dateversion[t]).join('.')
   }

@@ -18,7 +18,7 @@ module.exports = function createSemanticVersion(format, ver, alltags) {
     }
   }
 
-  function inc(level) {
+  function inc(level, dateUpdated=false) {
     if (['DEV', 'ALPHA', 'BETA', 'RC'].indexOf(level) !== -1) {
       const isLevelChanged = semversion.MODIFIER.split('.')[0].toUpperCase() != level
       const mv = semversion.MODIFIER.split('.')[1]
@@ -33,11 +33,11 @@ module.exports = function createSemanticVersion(format, ver, alltags) {
     if (['MAJOR', 'MINOR', 'MICRO'].indexOf(level) !== -1) {
       semversion[level] = parseInt(semversion[level]) + 1
       semversion.MODIFIER = ''
-      if (level == 'MINOR' && semversion.hasOwnProperty('MICRO'))
+      if ((level == 'MINOR' || dateUpdated) && semversion.hasOwnProperty('MICRO'))
         semversion.MICRO = '0';
-      if (level == 'MAJOR' && semversion.hasOwnProperty('MICRO'))
+      if ((level == 'MAJOR' || dateUpdated) && semversion.hasOwnProperty('MICRO'))
         semversion.MICRO = '0';
-      if (level == 'MAJOR' && semversion.hasOwnProperty('MINOR'))
+      if ((level == 'MAJOR' || dateUpdated) && semversion.hasOwnProperty('MINOR'))
         semversion.MINOR = '0';
     }
 

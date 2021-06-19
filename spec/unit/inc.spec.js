@@ -14,6 +14,7 @@ describe('inc', function() {
     expect(calver.inc('yyyy.0m', '2020.02', 'calendar')).toBe('2021.01')
     expect(calver.inc('yyyy.mm', '2020.2', 'calendar')).toBe('2021.1')
     expect(calver.inc('yy.mm.ww.dd', '20.2.7.22', 'calendar')).toBe('21.1.3.19')
+    expect(() => calver.inc('yy.mm.dd', '21.1.19', 'calendar')).toThrow()
   })
 
   it('semantic tags.', function() {
@@ -42,8 +43,16 @@ describe('inc', function() {
     expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.2.0', 'beta')).toBe('20.4.2.0-beta.1')
   })
 
+  it('semantic + modifier tags.', function() {
+    expect(calver.inc('yy.mm.minor.micro.modifier', '21.1.1.0', 'minor.beta')).toBe('21.1.2.0-beta.1')
+  })
+
   it('date + modifier tags.', function() {
+    expect(calver.inc('yy.mm.minor.micro.modifier', '19.1.1.0', 'calendar.beta')).toBe('21.1.0.0-beta.1')
     expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.1.2-alpha.1', 'calendar.alpha')).toBe('21.1.0.0-alpha.1')
     expect(calver.inc('yy.mm.minor.micro.modifier', '20.4.1.2-alpha.1', 'micro.alpha')).toBe('20.4.1.3-alpha.1')
+    expect(calver.inc('yy.mm.micro', '20.4.1', 'calendar.micro')).toBe('21.1.0')
+    expect(calver.inc('yy.mm.micro.modifier', '20.4.1-dev.3', 'calendar.micro')).toBe('21.1.0')
+    expect(calver.inc('yy.mm.micro', '21.1.0', 'calendar.micro')).toBe('21.1.1')
   })
 })
