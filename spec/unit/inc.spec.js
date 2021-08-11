@@ -54,5 +54,6 @@ describe('inc', function() {
     expect(calver.inc('yy.mm.micro', '20.4.1', 'calendar.micro')).toBe('21.1.0')
     expect(calver.inc('yy.mm.micro.modifier', '20.4.1-dev.3', 'calendar.micro')).toBe('21.1.0')
     expect(calver.inc('yy.mm.micro', '21.1.0', 'calendar.micro')).toBe('21.1.1')
+    expect(calver.inc('yy.mm.micro', '21.1.3', 'calendar.micro')).toBe('21.1.4')
   })
 })
