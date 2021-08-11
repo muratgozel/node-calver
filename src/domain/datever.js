@@ -123,7 +123,7 @@ module.exports = function createDateVersion(format, ver, now, alltags) {
   }
 
   function pretty(locale=undefined) {
-    return new Date(asNumeric()).toLocaleString(locale, {year: 'numeric', month: 'long'})
+    return new Date(asNumeric()).toLocaleString(locale, {year: 'numeric', month: 'long', timeZone: 'UTC'})
   }
 
   return {
