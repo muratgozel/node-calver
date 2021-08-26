@@ -1,6 +1,6 @@
 {
   "name": "calver",
-  "version": "21.1.4",
+  "version": "21.1.5",
   "description": "The calver parser for node. Because we love calendar versioning! 💙🎈",
   "main": "src/index.js",
   "scripts": {
