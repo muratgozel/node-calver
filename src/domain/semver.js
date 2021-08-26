@@ -18,7 +18,7 @@ module.exports = function createSemanticVersion(format, ver, alltags) {
     }
   }
 
-  function inc(level, dateUpdated=false) {
+  function inc(level) {
     if (['DEV', 'ALPHA', 'BETA', 'RC'].indexOf(level) !== -1) {
       const isLevelChanged = semversion.MODIFIER.split('.')[0].toUpperCase() != level
       const mv = semversion.MODIFIER.split('.')[1]
@@ -31,17 +31,20 @@ module.exports = function createSemanticVersion(format, ver, alltags) {
     }
 
     if (['MAJOR', 'MINOR', 'MICRO'].indexOf(level) !== -1) {
-      semversion[level] = parseInt(semversion[level]) + 1
+      semversion[level] = (Number(semversion[level]) + 1).toString()
       semversion.MODIFIER = ''
-      if ((level == 'MINOR' || dateUpdated) && semversion.hasOwnProperty('MICRO'))
-        semversion.MICRO = '0';
-      if ((level == 'MAJOR' || dateUpdated) && semversion.hasOwnProperty('MICRO'))
-        semversion.MICRO = '0';
-      if ((level == 'MAJOR' || dateUpdated) && semversion.hasOwnProperty('MINOR'))
-        semversion.MINOR = '0';
+      switch (level) {
+        case 'MINOR':
+          if (semversion.hasOwnProperty('MICRO')) semversion.MICRO = '0'
+          break;
+        case 'MAJOR':
+          if (semversion.hasOwnProperty('MICRO')) semversion.MICRO = '0'
+          if (semversion.hasOwnProperty('MINOR')) semversion.MINOR = '0'
+          break;
+      }
     }
 
-    if ('CALENDAR' == level) {
+    if ('CALENDAR' === level) {
       semversion.MODIFIER = ''
       if (semversion.hasOwnProperty('MICRO')) semversion.MICRO = '0'
       if (semversion.hasOwnProperty('MINOR')) semversion.MINOR = '0'

@@ -1,5 +1,4 @@
 module.exports = function createDateVersion(format, ver, now, alltags) {
-  let updated = null
   const tags = format.split('.').filter(f => alltags.date.indexOf(f) !== -1)
   const verarr = ver.length > 0 ? ver.split(/[.-]/) : []
 
@@ -96,34 +95,24 @@ module.exports = function createDateVersion(format, ver, now, alltags) {
     return Date.UTC(getYear(), getMonth(), getDay())
   }
 
-  function inc(level, multipleLevels=false) {
-    if (updated === false && alltags.modifier.indexOf(level) !== -1) updated = true
-    if (level != 'CALENDAR') return;
-
-    updated = false
+  function inc(level) {
+    if (level !== 'CALENDAR') return false;
+    let updated = false
     for (let i = 0; i < tags.length; i++) {
       const t = tags[i]
       const lv = getLiveValue(t)
-      if (dateversion[t] != lv) updated = true
-      dateversion[t] = lv
+      if (Number(dateversion[t]) !== lv) updated = true
+      dateversion[t] = lv.toString()
     }
-
-    if (updated === false && multipleLevels === false) {
-      throw new Error('There is no change in the version.')
-    }
-
     return updated
   }
 
   function asString() {
-    //if (updated === false && verarr.length > 0)
-      //throw new Error('There is no change in the version.');
-
     return Object.keys(dateversion).map(t => dateversion[t]).join('.')
   }
 
   function pretty(locale=undefined) {
-    return new Date(asNumeric()).toLocaleString(locale, {year: 'numeric', month: 'long'})
+    return new Date(asNumeric()).toLocaleString(locale, {year: 'numeric', month: 'long', timeZone: 'UTC'})
   }
 
   return {

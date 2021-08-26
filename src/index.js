@@ -7,7 +7,7 @@ function Calver() {
     semantic: ['MAJOR', 'MINOR', 'MICRO', 'MODIFIER'],
     modifier: ['DEV', 'ALPHA', 'BETA', 'RC']
   }
-  const levels = ['CALENDAR', 'MAJOR', 'MINOR', 'MICRO', 'DEV', 'ALPHA', 'BETA', 'RC']
+  const levels = ['CALENDAR', 'MAJOR', 'MINOR', 'MICRO', ...tags.modifier]
   const date = {
     now: new Date(Date.now())
   }
@@ -54,16 +54,23 @@ function Calver() {
     const datever = createDateVersion(format, ver, date.now, tags)
     const semver = createSemanticVersion(format, ver, tags)
 
-    let dateUpdated = false
-    const levelsarr = level.split('.')
-    for (let i = 0; i < levelsarr.length; i++) {
-      const l = levelsarr[i]
-      const updated = datever.inc(l, levelsarr.length > 1)
-      if (l == 'CALENDAR') dateUpdated = updated
-      semver.inc(l, dateUpdated)
+    let dateUpdated = false;
+    for (const l of level.split('.')) {
+      if (l === 'CALENDAR') {
+        if (datever.inc(l)) {
+          dateUpdated = true;
+          semver.inc('CALENDAR')
+        }
+      } else if (!dateUpdated || tags.modifier.includes(l))
+        semver.inc(l)
     }
 
-    return [datever.asString(), semver.asString()].filter(s => s).join('.')
+    const newVer = [datever.asString(), semver.asString()].filter(s => s).join('.');
+    if (ver === newVer) {
+      throw new Error('There is no change in the version.')
+    }
+
+    return newVer;
   }
 
   function pretty(format, ver, locale=undefined) {
