@@ -1,11 +1,23 @@
 {
   "name": "calver",
-  "version": "21.1.5",
-  "description": "The calver parser for node. Because we love calendar versioning! 💙🎈",
-  "main": "src/index.js",
+  "version": "21.11.0",
+  "description": "The calver parser for node. 📆 🚀",
+  "main": "./dist/node/lts/cjs/index.js",
+  "module": "./dist/node/lts/es/index.js",
+  "type": "module",
   "scripts": {
-    "test": "NODE_ENV=test jasmine",
-    "commit": "node dev/commit.js commit"
+    "test": "for i in tests/*.js; do node \"$i\"; done",
+    "build": "rollup --config rollup.config.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/node/es/index.js",
+      "require": "./dist/node/cjs/index.js"
+    },
+    "./node/lts": {
+      "import": "./dist/node/lts/es/index.js",
+      "require": "./dist/node/lts/cjs/index.js"
+    }
   },
   "repository": {
     "type": "git",
@@ -20,15 +32,35 @@
     "versioning",
     "versioning"
   ],
-  "author": "Murat Gözel <murat@gozel.com.tr>",
+  "author": {
+    "name": "Murat Gözel",
+    "email": "murat@gozel.com.tr",
+    "url": "https://gozel.com.tr"
+  },
+  "funding": {
+    "type": "ko-fi",
+    "url": "https://ko-fi.com/muratgozel"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/muratgozel/node-calver/issues"
   },
   "homepage": "https://github.com/muratgozel/node-calver#readme",
   "devDependencies": {
-    "colors": "^1.4.0",
-    "jasmine": "^3.7.0",
-    "yargs": "^16.2.0"
+    "@babel/cli": "^7.15.7",
+    "@babel/core": "^7.15.5",
+    "@babel/plugin-transform-runtime": "^7.15.0",
+    "@babel/preset-env": "^7.15.6",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.5",
+    "core-js": "^3.18.3",
+    "rollup": "^2.57.0",
+    "rollup-plugin-terser": "^7.0.2"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.15.4",
+    "@babel/runtime-corejs3": "^7.15.4"
   }
 }

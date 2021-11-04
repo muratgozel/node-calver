@@ -1,0 +1,16 @@
+{
+  "versioning": {
+    "scheme": "calver",
+    "format": "yy.mm.minor"
+  },
+  "npm": {
+    "enable": true,
+    "updatePkgJson": true,
+    "publish": true,
+    "publishCmdSuffix": "--access public"
+  },
+  "github": {
+    "enable": true,
+    "release": true
+  }
+}

@@ -1,134 +1,131 @@
 # node-calver | The Calendar Versioner
-The calver parser for node. Because we love calendar versioning! 📆 🚀
+The calver parser for node. 📆 🚀
 
 ![NPM](https://img.shields.io/npm/l/calver)
 [![npm version](https://badge.fury.io/js/calver.svg)](https://badge.fury.io/js/calver)
 ![npm bundle size](https://img.shields.io/bundlephobia/min/calver)
 ![npm](https://img.shields.io/npm/dy/calver)
 
-[Calendar versioning](https://calver.org/) is an alternative to [semantic versioning](https://semver.org/). They both have advantages to each other and used by popular softwares.
+## Why
+Yes, [semantic versioning](https://semver.org/) isn't the only versioning scheme. Software developers are versioning their software for decades and there are various schemes. [Calendar versioning](https://calver.org/) is one of them. It has a bit more flexible when compared to semver. It's based on dates and more human-readable. Personally, using it in my frontend projects and it's working pretty well.
 
-I wrote this module to apply calendar versioning to my frontend projects and it works well. Practically you can use calendar versioning anywhere. The semantic versioner's module [semver](https://github.com/npm/node-semver) inspired me a lot while writing this module. Hoping that developers will have more content to compare calendar versioning and semantic versioning and know that semantic versioning is not the only versioning standart.
-
-There is no dependency.
+## Implementation
+There is no standart (as much in semver) about the implementation of calendar versioning. The introduction in [calver.org](https://calver.org/) inspired me a lot and I build the API flexible enough for user to create versions in various formats.
 
 ## Install
+This is node.js module and compiled for `cjs` and `es` module environments. There is no dependency and it can be installed via npm:
 ```sh
 npm i calver
 ```
 
-## Before Using
-You may want to look at [calver.org](https://calver.org/) which I used as a reference while implementing this package, to better understand how to build calendar versioner.
-
-### Available Tags
-Here are the list of tags you can choose while creating a versioning scheme of your app.
-
-#### Date Tags
-1. **YYYY**
-2. **YY**
-3. **0Y**
-4. **MM**
-5. **0M**
-6. **WW**
-7. **0W**
-8. **DD**
-9. **0D**
-
-#### Semantic Tags
-1. **MAJOR**
-2. **MINOR**
-3. **MICRO**
-4. **MODIFIER**
-
-#### Modifier Tags
-1. **DEV**
-2. **ALPHA**
-3. **BETA**
-4. **RC**
-
-## Use
-This is an example usage in some application releasing lifecycle.
-
-We want our app's version in the following format: **yy.mm.minor.micro.modifier**
-
-Give your app a version number for the next release:
+## Usage
+Require or import:
 ```js
 const calver = require('calver')
-
-const format = 'yy.mm.minor.micro.modifier'
-calver.inc(format, '21.1.0.0', 'dev')
+// or
+import calver from 'calver'
 ```
-This will return **21.1.0.0-dev.1**
-
-When we done the changes and published this version, we can start to work on another update:
+If your `node < 14` then:
 ```js
-// format is same and place the previous version number in the second argument
-calver.inc(format, '21.1.0.0-dev.1', 'dev')
+const calver = require('calver/node/lts')
+// or
+import calver from 'calver/node/lts'
 ```
-And we are now **21.1.0.0-dev.2**
 
-When it is time to go alpha:
+Unlike semver, calver needs a `format` to deal with version strings. 
+
+### Choose Format
+A format is a recipe for calver to decide what will the next version be. In semver, format is fixed (MAJOR.MINOR.PATCH.MODIFIER) but in calver you create your own version format by using available tags.
+
+| Tag       | Type      | Description |
+| ---       | ---       | --- |
+| YYYY      | calendar  | Zero based year with max 4 digit. |
+| YY        | calendar  | Zero based year with max 2 digit. |
+| 0Y        | calendar  | Zero padded 2 digit year. |
+| MM        | calendar  | Zero based month with max 2 digit. |
+| 0M        | calendar  | Zero padded 2 digit month. |
+| WW        | calendar  | Zero based week of the year with max 2 digit. |
+| 0W        | calendar  | Zero padded 2 digit week of the year. |
+| DD        | calendar  | Zero based day of the month with max 2 digit. |
+| 0D        | calendar  | Zero padded 2 digit day of the month. |
+| MAJOR     | semantic  | Auto-increment number for breaking changes. |
+| MINOR     | semantic  | Auto-increment number for new features. |
+| PATCH     | semantic  | Auto-increment number for bug fixes. |
+| DEV       | modifier  | Auto-increment number for dev updates. |
+| ALPHA     | modifier  | Auto-increment number for alpha updates. |
+| BETA      | modifier  | Auto-increment number for beta updates. |
+| RC        | modifier  | Auto-increment number for release candidate updates. |
+
+You can combine any of these tags while choosing a format except modifiers. Let's say we choose:
 ```js
-// same logic
-calver.inc(format, '21.1.0.0-dev.2', 'alpha')
+const format = 'yyyy.mm.minor.patch'
 ```
-And we are now alpha: **21.1.0.0-alpha.1**
-
-Let's skip `beta` and `rs` tags and create a release version:
+and create an initial release:
 ```js
-// same same same
-calver.inc(format, '21.1.0.0-alpha.1', 'minor')
+// assuming current date is 2021.01
+const version = calver.inc(format, '', 'calendar')
+// version = 2021.1.0.0
 ```
-And **21.1.1.0**
+The second argument is previous version string that we would like to increment but left empty to show to create an initial version.
 
-This is how a release cycles.
+The third argument is the level of the increment operation. `level` might be one of the following:
 
-There is more options related to tags such as you can specify two tags:
+| Level                         | Type      | Description |
+| ---                           | ---       | --- |
+| calendar                      | calendar  | Updates calendar tags to the current date and removes modifier if it exist. |
+| major                         | semantic  | Increments the major tag, resets minor, patch tags and removes modifier if it exist. |
+| minor                         | semantic  | Increments the minor tag, resets the patch tag and removes modifier if it exist. |
+| patch                         | semantic  | Increments tha patch tag and removes modifier if it exist. |
+| dev                           | modifier  | Increments the dev tag. |
+| alpha                         | modifier  | Increments the alpha tag. |
+| beta                          | modifier  | Increments the beta tag. |
+| rc                            | modifier  | Increments the rc tag. |
+| calendar.[dev|alpha|beta|rc]  | composite | Updates calendar tags and adds specified modifier tag. |
+| major.[dev|alpha|beta|rc]     | composite | Increments the major tag and adds specified modifier tag. |
+| minor.[dev|alpha|beta|rc]     | composite | Increments the minor tag and adds specified modifier tag. |
+| patch.[dev|alpha|beta|rc]     | composite | Increments the patch tag and adds specified modifier tag. |
+
+Let's make some more updates:
 ```js
-// calendar means update date portion to today.
-calver.inc(format, '19.1.1.0', 'calendar.beta')
-// returns 21.1.0.0-beta.1 depending on the current date
+// assuming current date is 2021.01
 
-calver.inc(format, '21.1.1.0', 'minor.beta')
-// returns 21.1.2.0-beta.1
+const version = calver.inc(format, '2021.1.0.0', 'minor.dev')
+// version = 2021.1.1.0-dev.0
+
+const version = calver.inc(format, '2021.1.1.0-dev.0', 'dev')
+// version = 2021.1.1.0-dev.1
+
+const version = calver.inc(format, '2021.1.1.0-dev.1', 'dev')
+// version = 2021.1.1.0-dev.2
+
+const version = calver.inc(format, '2021.1.1.0-dev.2', 'alpha')
+// version = 2021.1.1.0-alpha.0
+
+const version = calver.inc(format, '2021.1.1.0-alpha.0', 'alpha')
+// version = 2021.1.1.0-alpha.1
+
+const version = calver.inc(format, '2021.1.1.0-alpha.1', 'minor')
+// version = 2021.1.1.0
+
+const version = calver.inc(format, '2021.1.1.0', 'minor')
+// version = 2021.1.2.0
+
+const version = calver.inc(format, '2021.1.2.0', 'patch')
+// version = 2021.1.2.1
 ```
-
-The first parameter **format** is fixed along with the project. It is called **versioning scheme**. You can use tags as written in the list above.
-
-The second parameter **version** is the current value of the **format**. (and `inc` will give you the next one)
-
-The third parameter **level** explains the majority and purpose of the update.
-1. It can be `calendar` to sync the date portion of the version with the current date.
-2. It can be one of `major`, `minor` and `micro` to update the semantic portion of the version.
-3. It can have two tags while the first one is one of the two above and the second one is either modifier or semantic. `calendar.alpha`, `minor.beta`, `calendar.micro` for example.
-
-### Validate Versions
-You may want to validate a version string against a format:
-```js
-try {
-  calver.valid('yyyy.mm.minor.modifier', '2021.5-alpha.1')
-} catch (e) {
-
-}
-```
-It will throw since it doesn't have a `minor` tag in its version string.
-
-### Prettify Version
-Print more human readable, pretty versions:
-```js
-// month names are in english by default
-const pretty = calver.pretty('yyyy.mm.micro', '2021.3.24', 'en')
-// based on turkish
-const pretty2 = calver.pretty('yyyy.mm.micro', '2021.3.24', 'tr')
-// with modifier tags
-const pretty3 = calver.pretty('yy.mm.micro.modifier', '21.3.4-alpha.1')
-```
-The first one is **March 2021 v24**, the second one is **Mart 2021 v24** and the third one is **March 2021 v4-alpha.1**
 
 ## Tests
-Tests are written in [jasmine](https://jasmine.github.io) and can be run with `npm run test`. You can browse spec folder to see more examples.
+```js
+npm run test
+```
+Note that the `Date.now()` function replaced with a fixed value in tests so we can reliably run tests whenever we want.
 
-One thing to note that the `Date.now()` function is fixed in tests so we can reliably run tests whenever we want.
+## Note
+Software versioning is hard. None of the schemes are working perfectly and currently it highly depends on the how you are going to use. See [this article written by donald stufft](https://caremad.io/posts/2016/02/versioning-software/).
+
+---
+
+Version management of this repository done by [releaser](https://github.com/muratgozel/node-releaser) 🚀
 
 ---
 

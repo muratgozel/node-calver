@@ -1,199 +1,143 @@
-const createDateVersion = require('./domain/datever')
-const createSemanticVersion = require('./domain/semver')
+import DateVersion from './DateVersion.js'
+import SemanticVersion from './SemanticVersion.js'
+import ModifierVersion from './ModifierVersion.js'
+import Version from './Version.js'
 
-function Calver() {
-  const tags = {
-    date: ['YYYY', 'YY', '0Y', 'MM', '0M', 'WW', '0W', 'DD', '0D'],
-    semantic: ['MAJOR', 'MINOR', 'MICRO', 'MODIFIER'],
-    modifier: ['DEV', 'ALPHA', 'BETA', 'RC']
-  }
-  const levels = ['CALENDAR', 'MAJOR', 'MINOR', 'MICRO', ...tags.modifier]
-  const date = {
-    now: new Date(Date.now())
+class Calver {
+  constructor() {
+    this.seperator = '.'
+    this.levels = ['CALENDAR', 'MAJOR', 'MINOR', 'PATCH', ...ModifierVersion.tags]
   }
 
-  function valid(format, ver) {
-    format = format.toUpperCase()
+  inc(format, version, levels) {
+    levels = this.validateLevels(levels)
+    format = this.validateFormat(format, levels)
+    version = this.parseVersion(version, format, levels)
 
-    validateFormat(format)
-    validateVersion(ver, format)
-    createDateVersion(format, ver, date.now, tags)
-    createSemanticVersion(format, ver, tags)
+    const obj = (new Version(version, this.seperator)).inc(levels).asObject()
 
-    return true;
+    return this.asString(format, obj)
   }
 
-  function init(format) {
-    format = validateFormat(format, {transformModifiers: false})
+  getTagType(tag) {
+    tag = tag.toUpperCase()
 
-    const datever = createDateVersion(format, '', date.now, tags)
-    const semver = createSemanticVersion(format, '', tags)
-
-    const tagssemantic = format.split('.').filter(f => tags.semantic.indexOf(f) !== -1)
-    if (tagssemantic.length > 0) {
-      semver.inc(tagssemantic[0])
-    }
-    const tagsdate = format.split('.').filter(f => tags.date.indexOf(f) !== -1)
-    if (tagsdate.length > 0) {
-      datever.inc('CALENDAR')
-      semver.inc('CALENDAR')
-    }
-    const tagsmodifier = format.split('.').filter(f => tags.modifier.indexOf(f) !== -1)
-    if (tagsmodifier.length > 0) {
-      semver.inc(tagsmodifier[0])
-    }
-
-    return [datever.asString(), semver.asString()].filter(s => s).join('.')
+    if (DateVersion.tags.indexOf(tag) !== -1) return 'calendar'
+    if (SemanticVersion.tags.indexOf(tag) !== -1) return 'semantic'
+    if (ModifierVersion.tags.indexOf(tag) !== -1) return 'modifier'
+    
+    return undefined;
   }
 
-  function inc(format, ver, level) {
-    format = validateFormat(format)
-    ver = validateVersion(ver, format)
-    level = validateLevel(level, format)
+  asString(format, obj) {
+    const result = []
 
-    const datever = createDateVersion(format, ver, date.now, tags)
-    const semver = createSemanticVersion(format, ver, tags)
-
-    let dateUpdated = false;
-    for (const l of level.split('.')) {
-      if (l === 'CALENDAR') {
-        if (datever.inc(l)) {
-          dateUpdated = true;
-          semver.inc('CALENDAR')
-        }
-      } else if (!dateUpdated || tags.modifier.includes(l))
-        semver.inc(l)
-    }
-
-    const newVer = [datever.asString(), semver.asString()].filter(s => s).join('.');
-    if (ver === newVer) {
-      throw new Error('There is no change in the version.')
-    }
-
-    return newVer;
-  }
-
-  function pretty(format, ver, locale=undefined) {
-    format = validateFormat(format)
-    ver = validateVersion(ver, format)
-
-    const datever = createDateVersion(format, ver, date.now, tags)
-    const semver = createSemanticVersion(format, ver, tags)
-
-    return datever.pretty(locale) + ' v' + semver.asString() + ''
-  }
-
-  function getTagType(input) {
-    input = input.toUpperCase()
-
-    if (tags.date.indexOf(input) !== -1) return 'date'
-    else if (tags.semantic.indexOf(input) !== -1) return 'semantic'
-    else if (tags.modifier.indexOf(input) !== -1) return 'modifier'
-    else return ''
-  }
-
-  function validateLevel(level, format) {
-    if (!level)
-      throw new Error('Please specify a valid level.');
-    level = level.trim().toUpperCase()
-    const formatarr = format.split('.')
-    const levelsarr = level.split('.')
-    if (levelsarr.length > 2)
-      throw new Error('You can specify 2 levels at max.');
-    if (!levelsarr)
-      throw new Error('You should specify at least one level.');
-
-    for (var i = 0; i < levelsarr.length; i++) {
-      const l = levelsarr[i]
-      if (levels.indexOf(l) === -1)
-        throw new Error('Invalid level.');
-      if (tags.modifier.indexOf(l) !== -1 && formatarr.indexOf('MODIFIER') === -1)
-        throw new Error('Level and format doesn\'t match.');
-      if (tags.semantic.indexOf(l) !== -1 && formatarr.indexOf(l) === -1)
-        throw new Error('Level and format doesn\'t match.');
-    }
-
-    return level
-  }
-
-  function validateVersion(ver, format) {
-    if (!ver)
-      throw new Error('Please specify a valid version.');
-
-    ver = ver.trim().toLowerCase()
-    if (/[^a-zA-Z0-9.-]/.test(ver) === true)
-      throw new Error('Unexpected characters in your version string.')
-
-    const formatarr = format.split('.')
-    const verarr = ver.split(/[.-]/)
-    if ((formatarr.indexOf('MODIFIER') === -1 && verarr.length < formatarr.length) ||
-        (formatarr.indexOf('MODIFIER') !== -1 && verarr.length + 1 != formatarr.length &&
-          verarr.length - 1 != formatarr.length))
-      throw new Error('Version and format lengths mismatch.');
-
-    return ver
-  }
-
-  function validateFormat(format, opts={transformModifiers: true}) {
-    if (!format)
-      throw new Error('Please specify a valid format.');
-    format = format.trim().toUpperCase().split('.')
-      .map(t =>
-                tags.modifier.indexOf(t) !== -1 && opts.transformModifiers === true
-                  ? 'MODIFIER'
-                  : t)
-      .join('.')
-    const tagsrepo = []
-    const tagsarr = format.split('.')
-    for (let i = 0; i < tagsarr.length; i++) {
-      const t = tagsarr[i].toUpperCase()
-
-      if (tags.date.indexOf(t) === -1 && tags.semantic.indexOf(t) === -1 &&
-          tags.modifier.indexOf(t) === -1)
-        throw new Error('Your format contains invalid tags.');
-
-      if (tagsrepo.indexOf(t) !== -1)
-        throw new Error('Your format is repeating the same tag.')
-      tagsrepo.push(t);
-    }
-
-    const tagsdate = tagsrepo.filter(t => tags.date.indexOf(t) !== -1)
-    let largestDateTagIndex = null
-    if (tagsdate.length > 0) {
-      const tagsdatesorted = tags.date.filter(t => tagsdate.indexOf(t) !== -1)
-      for (let j = 0; j < tagsdatesorted.length; j++) {
-        if (tagsdatesorted[j] != tagsdate[j])
-          throw new Error('Date tags are in the wrong order.');
-        largestDateTagIndex = tagsrepo.indexOf(tagsdate[j])
+    for (const tag of format.sorted) {
+      if (DateVersion.tags.indexOf(tag) !== -1) {
+        result.push(obj.calendar[tag])
+      }
+      if (SemanticVersion.tags.indexOf(tag) !== -1) {
+        result.push(obj.semantic[tag])
+      }
+      if (ModifierVersion.tags.indexOf(tag) !== -1 && obj.modifier) {
+        result.push(ModifierVersion.seperator + tag.toLowerCase() + this.seperator + obj.modifier[tag])
       }
     }
 
-    const tagssemantic = tagsrepo.filter(t => tags.semantic.indexOf(t) !== -1)
-    let largestSemanticTagIndex = null
-    if (tagssemantic.length > 0) {
-      const tagssemanticsorted = tags.semantic.filter(t => tagssemantic.indexOf(t) !== -1)
-      for (let k = 0; k < tagssemanticsorted.length; k++) {
-        if (tagssemanticsorted[k] != tagssemantic[k])
-          throw new Error('Semantic tags are in the wrong order.');
-        if (largestSemanticTagIndex === null)
-          largestSemanticTagIndex = tagsrepo.indexOf(tagssemantic[k])
+    return result
+      .join(this.seperator)
+      .replace(this.seperator + ModifierVersion.seperator, ModifierVersion.seperator)
+  }
+
+  parseVersion(version, format, levels) {
+    const map = {
+      versionStringHasModifier: /(dev|DEV|alpha|ALPHA|beta|BETA|rc|RC)/.test(version),
+      sorted: {},
+      calendar: {},
+      semantic: {},
+      modifier: {}
+    }
+
+    let startIndex=0, endIndex=0
+    for (const tag of format.sorted) {
+      endIndex = version.indexOf(this.seperator, startIndex+1)
+      if (endIndex === -1) endIndex = undefined
+
+      let value = version.slice(startIndex, endIndex)
+
+      if (value.indexOf(ModifierVersion.seperator) !== -1) {
+        endIndex = version.indexOf(ModifierVersion.seperator, startIndex+1)
+        value = version.slice(startIndex, endIndex)
+      }
+
+      if (ModifierVersion.tags.indexOf(value.toUpperCase()) !== -1) {
+        if (value.toUpperCase() != tag) value = '-1'
+        else value = version.slice(startIndex + value.length + 1)
+      }
+
+      if (isNaN(startIndex)) {
+        value = ModifierVersion.tags.indexOf(tag) !== -1 ? '-1' : '0'
+      }
+
+      if (value == '') {
+        value = '0'
+      }
+
+      map.sorted[tag] = value
+      if (format.calendar.indexOf(tag) !== -1) map.calendar[tag] = value
+      if (format.semantic.indexOf(tag) !== -1) map.semantic[tag] = value
+      if (format.modifier.indexOf(tag) !== -1) map.modifier[tag] = value
+
+      startIndex = endIndex + 1
+    }
+
+    return map
+  }
+
+  validateFormat(format, levels) {
+    const result = {
+      sorted: [],
+      calendar: [],
+      semantic: [],
+      modifier: []
+    }
+
+    const tags = format.toUpperCase().split(this.seperator)
+
+    for (const tag of tags) {
+      if (DateVersion.tags.indexOf(tag) !== -1) result.calendar.push(tag)
+      else if (SemanticVersion.tags.indexOf(tag) !== -1) result.semantic.push(tag)
+      else throw new Error(`[CALVER]: Invalid format tag "${tag}".`)
+
+      result.sorted.push(tag)
+    }
+
+    for (const level of levels) {
+      if (ModifierVersion.tags.indexOf(level) !== -1) {
+        result.modifier.push(level)
+        result.sorted.push(level)
       }
     }
 
-    if (largestDateTagIndex !== null && largestSemanticTagIndex !== null &&
-        largestDateTagIndex > largestSemanticTagIndex)
-      throw new Error('Semantic tags should come after date tags.');
-
-    return format
+    return result
   }
 
-  return {
-    init: init,
-    inc: inc,
-    pretty: pretty,
-    getTagType: getTagType,
-    valid: valid
+  validateLevels(levels) {
+    const result = []
+    const arr = levels.split('.')
+
+    for (const level of arr) {
+      const formatted = level.toUpperCase()
+      if (this.levels.indexOf(formatted) !== -1) {
+        result.push(formatted)
+      }
+      else {
+        throw new Error(`[CALVER]: Invalid level "${level}".`)
+      }
+    }
+
+    return result
   }
 }
 
-module.exports = Calver()
+export default new Calver()
