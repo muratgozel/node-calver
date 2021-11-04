@@ -80,7 +80,7 @@ The third argument is the level of the increment operation. `level` might be one
 | alpha                         | modifier  | Increments the alpha tag. |
 | beta                          | modifier  | Increments the beta tag. |
 | rc                            | modifier  | Increments the rc tag. |
-| calendar.(dev|alpha|beta|rc)  | composite | Updates calendar tags and adds specified modifier tag. |
+| calendar.[dev,alpha,beta,rc]  | composite | Updates calendar tags and adds specified modifier tag. |
 | major.[dev,alpha,beta,rc]     | composite | Increments the major tag and adds specified modifier tag. |
 | minor.[dev,alpha,beta,rc]     | composite | Increments the minor tag and adds specified modifier tag. |
 | patch.[dev,alpha,beta,rc]     | composite | Increments the patch tag and adds specified modifier tag. |
