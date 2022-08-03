@@ -1,11 +1,14 @@
 export default class SemanticVersion {
   static tags = ['MAJOR', 'MINOR', 'PATCH']
 
-  constructor(obj, parentSeperator) {
+  reDigits = /[^0-9]/
+
+  constructor(obj, parentSeperator, isInitialVersion) {
     this.MAJOR = null
     this.MINOR = null
     this.PATCH = null
 
+    this.isInitialVersion = isInitialVersion
     this.parentSeperator = parentSeperator
     this.props = []
 
@@ -14,9 +17,17 @@ export default class SemanticVersion {
 
   parse(obj) {
     for (const prop in obj) {
+      if (!this.isInitialVersion && !this.isValid(prop, obj[prop])) {
+        throw new Error(`Semantic tag ${prop} has an invalid value "${obj[prop]}"`)
+      }
+
       this[prop] = obj[prop]
       this.props.push(prop)
     }
+  }
+
+  reset() {
+    this.props.map(prop => this[prop] = 0)
   }
 
   inc(level) {
@@ -40,6 +51,11 @@ export default class SemanticVersion {
     }
 
     return this
+  }
+
+  isValid(prop, v) {
+    if (!v || typeof v != 'string' || this.reDigits.test(v)) return false
+    return true
   }
 
   asObject() {

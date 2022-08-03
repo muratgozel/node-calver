@@ -7,13 +7,18 @@ Date.now = function now() {
   return 1611069856248;
 }
 
+assert.strictEqual(calver.isValid('yyyy.mm.0w', '2020.6.1'), false)
+assert.strictEqual(calver.isValid('yyyy.mm.0w', '2020.6.01'), true)
+assert.strictEqual(calver.isValid('yyyy.mm.minor.patch', '2022.8.0.0'), true)
+assert.strictEqual(calver.isValid('yyyy.mm.minor.patch', '0.0.0.1'), false)
+
 assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1', 'dev'), '2020.6.1-dev.0')
 assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1-dev.0', 'dev'), '2020.6.1-dev.1')
 assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1-dev.1', 'alpha'), '2020.6.1-alpha.0')
 assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1-alpha.0', 'alpha'), '2020.6.1-alpha.1')
 assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1-alpha.1', 'alpha'), '2020.6.1-alpha.2')
 assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1-alpha.2', 'calendar'), '2020.6.1')
-assert.strictEqual(calver.inc('yyyy.mm.0w', '2020.6.1', 'calendar'), '2021.1.03')
+assert.strictEqual(calver.inc('yyyy.mm.0w', '2020.6.01', 'calendar'), '2021.1.03')
 
 assert.strictEqual(calver.inc('yyyy.mm.major.minor', '2020.6.30.40', 'calendar'), '2021.1.30.40')
 assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40', 'calendar'), '2021.01.30.40')
@@ -45,5 +50,16 @@ assert.strictEqual(calver.inc('major.minor.patch', '', 'major'), '1.0.0')
 assert.strictEqual(calver.inc('yyyy.mm', '', 'calendar'), '2021.1')
 assert.strictEqual(calver.inc('yyyy.mm.major.minor.patch', '', 'calendar'), '2021.1.0.0.0')
 assert.strictEqual(calver.inc('yyyy.mm.major.minor.patch', '', 'minor'), '0.0.0.1.0')
-assert.strictEqual(calver.inc('yyyy.mm.major.minor.patch', '0.0.0.1.0', 'calendar'), '2021.1.0.1.0')
+assert.throws(() => calver.inc('yyyy.mm.major.minor.patch', '0.0.0.1.0', 'calendar'))
 assert.strictEqual(calver.inc('yyyy.mm.major.minor.patch', '', 'calendar.dev'), '2021.1.0.0.0-dev.0')
+
+assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.6.38', 'calendar'), '2021.1.38')
+assert.throws(() => calver.inc('yyyy.mm.minor', '2021.1.38', 'calendar'))
+assert.strictEqual(calver.inc('minor.yyyy.mm', '38.2020.6', 'calendar'), '38.2021.1')
+assert.throws(() => calver.inc('minor.yyyy.mm', '38.2021.1', 'calendar'))
+
+assert.strictEqual(calver.inc('YY.MM.MINOR', '20.4.83', 'calendar.minor'), '21.1.0')
+assert.strictEqual(calver.inc('YY.MM.MINOR', '21.1.0', 'calendar.minor'), '21.1.1')
+assert.strictEqual(calver.inc('YY.MM.MINOR', '21.1.1', 'calendar.minor'), '21.1.2')
+
+assert.strictEqual(calver.inc('yyyy.mm.minor.patch', '', 'calendar'), '2021.1.0.0')

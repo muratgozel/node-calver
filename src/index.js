@@ -12,11 +12,32 @@ class Calver {
   inc(format, version, levels) {
     levels = this.validateLevels(levels)
     format = this.validateFormat(format, levels)
-    version = this.parseVersion(version, format, levels)
+    const parsedVersion = this.parseVersion(version, format, levels)
 
-    const obj = (new Version(version, this.seperator)).inc(levels).asObject()
+    const obj = (new Version(parsedVersion, this.seperator)).inc(levels).asObject()
 
-    return this.asString(format, obj)
+    const result = this.asString(format, obj)
+
+    if (version == result) {
+      throw new Error('No change happened in the version.')
+    }
+
+    return result
+  }
+
+  isValid(format, version) {
+    if (!version) return false
+
+    try {
+      format = this.validateFormat(format, [])
+      version = this.parseVersion(version, format, [])
+
+      new Version(version, this.seperator)
+
+      return true
+    } catch (e) {
+      return false
+    }
   }
 
   getTagType(tag) {
@@ -51,6 +72,8 @@ class Calver {
 
   parseVersion(version, format, levels) {
     const map = {
+      isCalendarLeading: format.isCalendarLeading,
+      isInitialVersion: !version,
       versionStringHasModifier: /(dev|DEV|alpha|ALPHA|beta|BETA|rc|RC)/.test(version),
       sorted: {},
       calendar: {},
@@ -118,6 +141,8 @@ class Calver {
         result.sorted.push(level)
       }
     }
+
+    result.isCalendarLeading = DateVersion.tags.indexOf(result.sorted[0]) !== -1
 
     return result
   }

@@ -85,6 +85,7 @@ The third argument is the level of the increment operation. `level` might be one
 | minor.[dev,alpha,beta,rc]     | composite | Increments the minor tag and adds specified modifier tag. |
 | patch.[dev,alpha,beta,rc]     | composite | Increments the patch tag and adds specified modifier tag. |
 
+### Increment
 Let's make some more updates:
 ```js
 // assuming current date is 2021.01
@@ -112,6 +113,24 @@ const version = calver.inc(format, '2021.1.1.0', 'minor')
 
 const version = calver.inc(format, '2021.1.2.0', 'patch')
 // version = 2021.1.2.1
+```
+
+To create an initial version, just leave the version field empty:
+```js
+const version = calver.inc(format, '', 'calendar') // 2021.1.0.0
+```
+
+To increment based on both calendar and semantic tags:
+```js
+const version = calver.inc('yy.mm.minor', '', 'calendar.minor') // 2021.1.0
+const version = calver.inc('yy.mm.minor', '2021.1.0', 'calendar.minor') // 2021.1.1
+```
+
+### Validation
+Test the input if it is valid against a format:
+```js
+calver.isValid('yyyy.mm.0w', '2020.6.1') === false // because 0W can't be "1", it should be "01"
+calver.isValid('yyyy.mm.minor.patch', '0.0.0.1') === false // because YYYY and MM can't be "0"
 ```
 
 ## Tests
