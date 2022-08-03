@@ -1,6 +1,6 @@
 {
   "name": "calver",
-  "version": "22.8.3",
+  "version": "22.8.4",
   "description": "The calver parser for node. 📆 🚀",
   "main": "./dist/node/lts/cjs/index.js",
   "module": "./dist/node/lts/es/index.js",

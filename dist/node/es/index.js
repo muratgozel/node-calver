@@ -1,7 +1,9 @@
 class DateVersion {
   static tags = ['YYYY', 'YY', '0Y', 'MM', '0M', 'WW', '0W', 'DD', '0D']
 
-  constructor(obj, parentSeperator) {
+  reDigits = /[^0-9]/
+
+  constructor(obj, parentSeperator, isInitialVersion) {
     this['YYYY'] = null;
     this['YY'] = null;
     this['0Y'] = null;
@@ -12,6 +14,8 @@ class DateVersion {
     this['DD'] = null;
     this['0D'] = null;
 
+    this.hasChanged = false;
+    this.isInitialVersion = isInitialVersion;
     this.parentSeperator = parentSeperator;
     this.props = [];
     this.date = new Date(Date.now());
@@ -21,12 +25,18 @@ class DateVersion {
 
   parse(obj) {
     for (const prop in obj) {
+      if (!this.isInitialVersion && !this.isValid(prop, obj[prop])) {
+        throw new Error(`Calendar tag ${prop} has an invalid value "${obj[prop]}"`)
+      }
+
       this[prop] = obj[prop];
       this.props.push(prop);
     }
   }
 
   inc(level) {
+    const prevValue = this.asString();
+
     const yearstr = this.date.getUTCFullYear().toString();
     this['YYYY'] = yearstr;
     this['YY'] = parseInt(yearstr.slice(2)).toString();
@@ -44,7 +54,50 @@ class DateVersion {
     this['DD'] = daystr;
     this['0D'] = this['DD'].padStart(2, '0');
 
+    const newValue = this.asString();
+
+    this.hasChanged = prevValue != newValue;
+
     return this
+  }
+
+  isValid(prop, v) {
+    if (!v || typeof v != 'string' || this.reDigits.test(v)) return false
+
+    switch (prop) {
+      case 'YYYY':
+        if (v.slice(0, 1) == '0') return false
+        return v.length === 4
+
+      case 'YY':
+        if (v.slice(0, 1) == '0') return false
+        return v.length === 1 || v.length === 2 || v.length === 3
+
+      case '0Y':
+        if ((v.length == 2 || v.length == 3) && v.slice(0, 1) == '0') return false
+        return v.length === 2 || v.length === 3
+
+      case 'MM':
+        return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].indexOf(Number(v)) !== -1
+
+      case '0M':
+        return ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+          .indexOf(v) !== -1
+
+      case 'WW':
+        return Number(v) >= 1 && Number(v) <= 52
+
+      case '0W':
+        if (v.length != 2) return false
+        return Number(v) >= 1 && Number(v) <= 52
+
+      case 'DD':
+        return Number(v) >= 1 && Number(v) <= 31
+
+      case '0D':
+        if (v.length != 2) return false
+        return Number(v) >= 1 && Number(v) <= 31
+    }
   }
 
   asObject() {
@@ -77,11 +130,14 @@ class DateVersion {
 class SemanticVersion {
   static tags = ['MAJOR', 'MINOR', 'PATCH']
 
-  constructor(obj, parentSeperator) {
+  reDigits = /[^0-9]/
+
+  constructor(obj, parentSeperator, isInitialVersion) {
     this.MAJOR = null;
     this.MINOR = null;
     this.PATCH = null;
 
+    this.isInitialVersion = isInitialVersion;
     this.parentSeperator = parentSeperator;
     this.props = [];
 
@@ -90,9 +146,17 @@ class SemanticVersion {
 
   parse(obj) {
     for (const prop in obj) {
+      if (!this.isInitialVersion && !this.isValid(prop, obj[prop])) {
+        throw new Error(`Semantic tag ${prop} has an invalid value "${obj[prop]}"`)
+      }
+
       this[prop] = obj[prop];
       this.props.push(prop);
     }
+  }
+
+  reset() {
+    this.props.map(prop => this[prop] = 0);
   }
 
   inc(level) {
@@ -118,6 +182,11 @@ class SemanticVersion {
     return this
   }
 
+  isValid(prop, v) {
+    if (!v || typeof v != 'string' || this.reDigits.test(v)) return false
+    return true
+  }
+
   asObject() {
     return this.props.reduce((memo, prop) => {
       memo[prop] = this[prop];
@@ -138,12 +207,15 @@ class ModifierVersion {
   static seperator = '-'
   static tags = ['DEV', 'ALPHA', 'BETA', 'RC']
 
-  constructor(obj, parentSeperator) {
+  reDigits = /[^0-9\-]/
+
+  constructor(obj, parentSeperator, isInitialVersion) {
     this.DEV = null;
     this.ALPHA = null;
     this.BETA = null;
     this.RC = null;
 
+    this.isInitialVersion = isInitialVersion;
     this.parentSeperator = parentSeperator;
     this.prop = null;
 
@@ -152,6 +224,10 @@ class ModifierVersion {
 
   parse(obj) {
     for (const prop in obj) {
+      if (!this.isInitialVersion && !this.isValid(prop, obj[prop])) {
+        throw new Error(`Modifier tag ${prop} has an invalid value "${obj[prop]}"`)
+      }
+
       this.prop = prop;
       this[prop] = obj[prop];
     }
@@ -165,6 +241,12 @@ class ModifierVersion {
     this[this.prop] = (parseInt(this[this.prop]) + 1).toString();
 
     return this
+  }
+
+  isValid(prop, v) {
+    if (!v || typeof v != 'string' || this.reDigits.test(v)) return false
+    if (v.indexOf('-') !== -1 && v != '-1') return false
+    return true
   }
 
   asObject() {
@@ -182,6 +264,8 @@ class Version {
   constructor(version, seperator) {
     this.seperator = seperator;
     this.versionStringHasModifier = version.versionStringHasModifier;
+    this.isInitialVersion = version.isInitialVersion;
+    this.isCalendarLeading = version.isCalendarLeading;
     this.datever = null;
     this.semanticver = null;
     this.modifierver = null;
@@ -191,15 +275,15 @@ class Version {
 
   parse(version) {
     if (Object.keys(version.calendar).length > 0) {
-      this.datever = new DateVersion(version.calendar, this.seperator);
+      this.datever = new DateVersion(version.calendar, this.seperator, this.isInitialVersion);
     }
 
     if (Object.keys(version.semantic).length > 0) {
-      this.semanticver = new SemanticVersion(version.semantic, this.seperator);
+      this.semanticver = new SemanticVersion(version.semantic, this.seperator, this.isInitialVersion);
     }
 
     if (Object.keys(version.modifier).length > 0) {
-      this.modifierver = new ModifierVersion(version.modifier, this.seperator);
+      this.modifierver = new ModifierVersion(version.modifier, this.seperator, this.isInitialVersion);
     }
   }
 
@@ -208,7 +292,7 @@ class Version {
 
     const removeModifier = levels.length === 1 
       && ['MAJOR', 'MINOR', 'PATCH', 'CALENDAR'].indexOf(l) !== -1 
-      && this.versionStringHasModifier ? true : false;
+      && this.versionStringHasModifier;
     if (removeModifier) {
       this.modifierver = null;
 
@@ -222,10 +306,15 @@ class Version {
     if (levels.length > 1) {
       const l2 = levels[1];
 
-      if (ModifierVersion.tags.indexOf(l2) !== -1 && 
-          ModifierVersion.tags.indexOf(l) === -1) this.modifierver.inc(l2);
+      if (ModifierVersion.tags.indexOf(l2) !== -1 && ModifierVersion.tags.indexOf(l) === -1) {
+        this.modifierver.inc(l2);
+      }
+      else if (SemanticVersion.tags.indexOf(l2) !== -1) {
+        if (this.isCalendarLeading && this.datever.hasChanged) this.semanticver.reset();
+        else this.semanticver.inc(l2);
+      }
       else {
-        throw new Error(`The second tag of the level should be a modifier tag. You specified "${l2}" as the second tag and "${l}" as the first tag.`)
+        throw new Error(`The second tag of the level should be either modifier or semantic tag. You specified "${l2}" as the second tag and "${l}" as the first tag.`)
       }
     }
 
@@ -256,11 +345,32 @@ class Calver {
   inc(format, version, levels) {
     levels = this.validateLevels(levels);
     format = this.validateFormat(format, levels);
-    version = this.parseVersion(version, format, levels);
+    const parsedVersion = this.parseVersion(version, format, levels);
 
-    const obj = (new Version(version, this.seperator)).inc(levels).asObject();
+    const obj = (new Version(parsedVersion, this.seperator)).inc(levels).asObject();
 
-    return this.asString(format, obj)
+    const result = this.asString(format, obj);
+
+    if (version == result) {
+      throw new Error('No change happened in the version.')
+    }
+
+    return result
+  }
+
+  isValid(format, version) {
+    if (!version) return false
+
+    try {
+      format = this.validateFormat(format, []);
+      version = this.parseVersion(version, format, []);
+
+      new Version(version, this.seperator);
+
+      return true
+    } catch (e) {
+      return false
+    }
   }
 
   getTagType(tag) {
@@ -295,6 +405,8 @@ class Calver {
 
   parseVersion(version, format, levels) {
     const map = {
+      isCalendarLeading: format.isCalendarLeading,
+      isInitialVersion: !version,
       versionStringHasModifier: /(dev|DEV|alpha|ALPHA|beta|BETA|rc|RC)/.test(version),
       sorted: {},
       calendar: {},
@@ -362,6 +474,8 @@ class Calver {
         result.sorted.push(level);
       }
     }
+
+    result.isCalendarLeading = DateVersion.tags.indexOf(result.sorted[0]) !== -1;
 
     return result
   }
