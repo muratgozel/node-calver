@@ -3,7 +3,7 @@ export default class DateVersion {
 
   reDigits = /[^0-9]/
 
-  constructor(obj, parentSeperator, isInitialVersion) {
+  constructor(obj, parentSeperator, isInitialVersion, date) {
     this['YYYY'] = null
     this['YY'] = null
     this['0Y'] = null
@@ -18,7 +18,7 @@ export default class DateVersion {
     this.isInitialVersion = isInitialVersion
     this.parentSeperator = parentSeperator
     this.props = []
-    this.date = new Date(Date.now())
+    this.date = date
 
     this.parse(obj)
   }
@@ -37,20 +37,20 @@ export default class DateVersion {
   inc(level) {
     const prevValue = this.asString()
 
-    const yearstr = this.date.getUTCFullYear().toString()
+    const yearstr = this.date.getFullYear().toString()
     this['YYYY'] = yearstr
     this['YY'] = parseInt(yearstr.slice(2)).toString()
     this['0Y'] = this['YY'].padStart(2, '0')
 
-    const monthstr = (this.date.getUTCMonth() + 1).toString()
+    const monthstr = (this.date.getMonth() + 1).toString()
     this['MM'] = monthstr
     this['0M'] = this['MM'].padStart(2, '0')
 
-    const weekstr = this.getUTCWeek(this.date).toString()
+    const weekstr = this.date.getWeek().toString()
     this['WW'] = weekstr
     this['0W'] = this['WW'].padStart(2, '0')
 
-    const daystr = this.date.getUTCDate().toString()
+    const daystr = this.date.getDate().toString()
     this['DD'] = daystr
     this['0D'] = this['DD'].padStart(2, '0')
 
@@ -122,16 +122,5 @@ export default class DateVersion {
       if (this.props.indexOf(tag) !== -1) result.push(this[tag])
     }
     return result.join(this.parentSeperator)
-  }
-
-  getUTCWeek(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-    const daynum = d.getUTCDay() || 7
-
-    d.setUTCDate(d.getUTCDate() + 4 - daynum)
-
-    const yearstart = new Date( Date.UTC(d.getUTCFullYear(), 0, 1) )
-
-    return Math.ceil((((d - yearstart) / 86400000) + 1)/7)
   }
 }
