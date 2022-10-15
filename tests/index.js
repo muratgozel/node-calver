@@ -7,6 +7,10 @@ Date.now = function now() {
   return 1611069856248;
 }
 
+// fixed current timezone for test environment.
+// calver respects UTC as a default timezone unless explicitly set useLocalTime as true.
+process.env.TZ = 'Asia/Tokyo'
+
 assert.strictEqual(calver.isValid('yyyy.mm.0w', '2020.6.1'), false)
 assert.strictEqual(calver.isValid('yyyy.mm.0w', '2020.6.01'), true)
 assert.strictEqual(calver.isValid('yyyy.mm.minor.patch', '2022.8.0.0'), true)
@@ -63,3 +67,9 @@ assert.strictEqual(calver.inc('YY.MM.MINOR', '21.1.0', 'calendar.minor'), '21.1.
 assert.strictEqual(calver.inc('YY.MM.MINOR', '21.1.1', 'calendar.minor'), '21.1.2')
 
 assert.strictEqual(calver.inc('yyyy.mm.minor.patch', '', 'calendar'), '2021.1.0.0')
+
+assert.strictEqual(calver.inc('yyyy.mm.dd.minor.patch', '', 'calendar'), '2021.1.19.0.0')
+
+calver.useLocalTime = true
+
+assert.strictEqual(calver.inc('yyyy.mm.dd.minor.patch', '', 'calendar'), '2021.1.20.0.0')
