@@ -1,5 +1,5 @@
 export default class ModifierVersion {
-  static seperator = '-'
+  static separator = '-'
   static tags = ['DEV', 'ALPHA', 'BETA', 'RC']
 
   reDigits = /[^0-9\-]/
@@ -51,6 +51,6 @@ export default class ModifierVersion {
   }
 
   asString() {
-    return `${this.constructor.seperator}${this.prop}${this.parentSeparator}${this[this.prop]}`
+    return `${this.constructor.separator}${this.prop}${this.parentSeparator}${this[this.prop]}`
   }
 }

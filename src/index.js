@@ -7,7 +7,7 @@ import Version from './Version.js'
 
 class Calver {
   constructor() {
-    this.seperator = '.'
+    this.separator = '.'
     this.levels = ['CALENDAR', 'MAJOR', 'MINOR', 'PATCH', ...ModifierVersion.tags]
     this._useLocalTime = false
   }
@@ -18,7 +18,7 @@ class Calver {
     const parsedVersion = this.parseVersion(version, format, levels)
     const date = this._useLocalTime ? new LocalDate() : new UtcDate()
 
-    const obj = (new Version(parsedVersion, this.seperator, date)).inc(levels).asObject()
+    const obj = (new Version(parsedVersion, this.separator, date)).inc(levels).asObject()
 
     const result = this.asString(format, obj)
 
@@ -36,7 +36,7 @@ class Calver {
       format = this.validateFormat(format, [])
       version = this.parseVersion(version, format, [])
 
-      new Version(version, this.seperator)
+      new Version(version, this.separator)
 
       return true
     } catch (e) {
@@ -65,13 +65,13 @@ class Calver {
         result.push(obj.semantic[tag])
       }
       if (ModifierVersion.tags.indexOf(tag) !== -1 && obj.modifier) {
-        result.push(ModifierVersion.seperator + tag.toLowerCase() + this.seperator + obj.modifier[tag])
+        result.push(ModifierVersion.separator + tag.toLowerCase() + this.separator + obj.modifier[tag])
       }
     }
 
     return result
-      .join(this.seperator)
-      .replace(this.seperator + ModifierVersion.seperator, ModifierVersion.seperator)
+      .join(this.separator)
+      .replace(this.separator + ModifierVersion.separator, ModifierVersion.separator)
   }
 
   parseVersion(version, format, levels) {
@@ -87,13 +87,13 @@ class Calver {
 
     let startIndex=0, endIndex=0
     for (const tag of format.sorted) {
-      endIndex = version.indexOf(this.seperator, startIndex+1)
+      endIndex = version.indexOf(this.separator, startIndex+1)
       if (endIndex === -1) endIndex = undefined
 
       let value = version.slice(startIndex, endIndex)
 
-      if (value.indexOf(ModifierVersion.seperator) !== -1) {
-        endIndex = version.indexOf(ModifierVersion.seperator, startIndex+1)
+      if (value.indexOf(ModifierVersion.separator) !== -1) {
+        endIndex = version.indexOf(ModifierVersion.separator, startIndex+1)
         value = version.slice(startIndex, endIndex)
       }
 
@@ -129,7 +129,7 @@ class Calver {
       modifier: []
     }
 
-    const tags = format.toUpperCase().split(this.seperator)
+    const tags = format.toUpperCase().split(this.separator)
 
     for (const tag of tags) {
       if (DateVersion.tags.indexOf(tag) !== -1) result.calendar.push(tag)
