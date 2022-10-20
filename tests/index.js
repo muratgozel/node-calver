@@ -70,6 +70,8 @@ assert.strictEqual(calver.inc('yyyy.mm.minor.patch', '', 'calendar'), '2021.1.0.
 
 assert.strictEqual(calver.inc('yyyy.mm.dd.minor.patch', '', 'calendar'), '2021.1.19.0.0')
 
+assert.strictEqual(calver.inc('yyyy.mm.minor.patch', '', 'calendar.minor'), '2021.1.0.0')
+
 calver.useLocalTime = true
 
 assert.strictEqual(calver.inc('yyyy.mm.dd.minor.patch', '', 'calendar'), '2021.1.20.0.0')

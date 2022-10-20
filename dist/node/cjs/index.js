@@ -5,7 +5,7 @@ class DateVersion {
 
   reDigits = /[^0-9]/
 
-  constructor(obj, parentSeperator, isInitialVersion) {
+  constructor(obj, parentSeperator, isInitialVersion, date) {
     this['YYYY'] = null;
     this['YY'] = null;
     this['0Y'] = null;
@@ -20,7 +20,7 @@ class DateVersion {
     this.isInitialVersion = isInitialVersion;
     this.parentSeperator = parentSeperator;
     this.props = [];
-    this.date = new Date(Date.now());
+    this.date = date;
 
     this.parse(obj);
   }
@@ -39,20 +39,20 @@ class DateVersion {
   inc(level) {
     const prevValue = this.asString();
 
-    const yearstr = this.date.getUTCFullYear().toString();
+    const yearstr = this.date.getFullYear().toString();
     this['YYYY'] = yearstr;
     this['YY'] = parseInt(yearstr.slice(2)).toString();
     this['0Y'] = this['YY'].padStart(2, '0');
 
-    const monthstr = (this.date.getUTCMonth() + 1).toString();
+    const monthstr = (this.date.getMonth() + 1).toString();
     this['MM'] = monthstr;
     this['0M'] = this['MM'].padStart(2, '0');
 
-    const weekstr = this.getUTCWeek(this.date).toString();
+    const weekstr = this.date.getWeek().toString();
     this['WW'] = weekstr;
     this['0W'] = this['WW'].padStart(2, '0');
 
-    const daystr = this.date.getUTCDate().toString();
+    const daystr = this.date.getDate().toString();
     this['DD'] = daystr;
     this['0D'] = this['DD'].padStart(2, '0');
 
@@ -115,17 +115,6 @@ class DateVersion {
       if (this.props.indexOf(tag) !== -1) result.push(this[tag]);
     }
     return result.join(this.parentSeperator)
-  }
-
-  getUTCWeek(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const daynum = d.getUTCDay() || 7;
-
-    d.setUTCDate(d.getUTCDate() + 4 - daynum);
-
-    const yearstart = new Date( Date.UTC(d.getUTCFullYear(), 0, 1) );
-
-    return Math.ceil((((d - yearstart) / 86400000) + 1)/7)
   }
 }
 
@@ -262,8 +251,84 @@ class ModifierVersion {
   }
 }
 
+class UtcDate {
+  constructor() {
+    this.date = new Date(Date.now());
+  }
+
+  getFullYear() {
+    return this.date.getUTCFullYear()
+  }
+
+  getMonth() {
+    return this.date.getUTCMonth()
+  }
+
+  getWeek() {
+    return this.getUTCWeek()
+  }
+
+  getDate() {
+    return this.date.getUTCDate()
+  }
+
+  getUTCWeek() {
+    const d = new Date(
+      Date.UTC(
+        this.date.getFullYear(),
+        this.date.getMonth(),
+        this.date.getDate()
+      )
+    );
+    const daynum = d.getUTCDay() || 7;
+
+    d.setUTCDate(d.getUTCDate() + 4 - daynum);
+
+    const yearstart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+
+    return Math.ceil(((d - yearstart) / 86400000 + 1) / 7)
+  }
+}
+
+class LocalDate {
+  constructor() {
+    this.date = new Date(Date.now());
+  }
+
+  getFullYear() {
+    return this.date.getFullYear()
+  }
+
+  getMonth() {
+    return this.date.getMonth()
+  }
+
+  getWeek() {
+    return this.getWeek()
+  }
+
+  getDate() {
+    return this.date.getDate()
+  }
+
+  getWeek() {
+    const d = new Date(
+      this.date.getFullYear(),
+      this.date.getMonth(),
+      this.date.getDate()
+    );
+    const daynum = d.getDay() || 7;
+
+    d.setDate(d.getDate() + 4 - daynum);
+
+    const yearstart = new Date(d.getFullYear(), 0, 1);
+
+    return Math.ceil(((d - yearstart) / 86400000 + 1) / 7)
+  }
+}
+
 class Version {
-  constructor(version, seperator) {
+  constructor(version, seperator, date) {
     this.seperator = seperator;
     this.versionStringHasModifier = version.versionStringHasModifier;
     this.isInitialVersion = version.isInitialVersion;
@@ -271,13 +336,14 @@ class Version {
     this.datever = null;
     this.semanticver = null;
     this.modifierver = null;
+    this.date = date;
 
     this.parse(version);
   }
 
   parse(version) {
     if (Object.keys(version.calendar).length > 0) {
-      this.datever = new DateVersion(version.calendar, this.seperator, this.isInitialVersion);
+      this.datever = new DateVersion(version.calendar, this.seperator, this.isInitialVersion, this.date);
     }
 
     if (Object.keys(version.semantic).length > 0) {
@@ -342,14 +408,16 @@ class Calver {
   constructor() {
     this.seperator = '.';
     this.levels = ['CALENDAR', 'MAJOR', 'MINOR', 'PATCH', ...ModifierVersion.tags];
+    this._useLocalTime = false;
   }
 
   inc(format, version, levels) {
     levels = this.validateLevels(levels);
     format = this.validateFormat(format, levels);
     const parsedVersion = this.parseVersion(version, format, levels);
+    const date = this._useLocalTime ? new LocalDate() : new UtcDate();
 
-    const obj = (new Version(parsedVersion, this.seperator)).inc(levels).asObject();
+    const obj = (new Version(parsedVersion, this.seperator, date)).inc(levels).asObject();
 
     const result = this.asString(format, obj);
 
@@ -497,6 +565,10 @@ class Calver {
     }
 
     return result
+  }
+
+  set useLocalTime(value) {
+    this._useLocalTime = value;
   }
 }
 

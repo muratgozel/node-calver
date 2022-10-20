@@ -23,6 +23,22 @@
     "type": "git",
     "url": "git+https://github.com/muratgozel/node-calver.git"
   },
+  "releaser": {
+    "versioning": {
+      "scheme": "calver",
+      "format": "yy.mm.minor"
+    },
+    "npm": {
+      "enable": true,
+      "updatePkgJson": true,
+      "publish": true,
+      "publishCmdSuffix": "--access public"
+    },
+    "github": {
+      "enable": true,
+      "release": true
+    }
+  },
   "keywords": [
     "calver",
     "calendar",
@@ -56,6 +72,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.5",
     "core-js": "^3.18.3",
+    "node-releaser": "^1.0.1",
     "rollup": "^2.57.0",
     "rollup-plugin-terser": "^7.0.2"
   },
