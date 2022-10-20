@@ -1,20 +1,24 @@
 import DateVersion from './DateVersion.js'
 import SemanticVersion from './SemanticVersion.js'
 import ModifierVersion from './ModifierVersion.js'
+import UtcDate from './UtcDate.js'
+import LocalDate from './LocalDate.js'
 import Version from './Version.js'
 
 class Calver {
   constructor() {
     this.seperator = '.'
     this.levels = ['CALENDAR', 'MAJOR', 'MINOR', 'PATCH', ...ModifierVersion.tags]
+    this._useLocalTime = false
   }
 
   inc(format, version, levels) {
     levels = this.validateLevels(levels)
     format = this.validateFormat(format, levels)
     const parsedVersion = this.parseVersion(version, format, levels)
+    const date = this._useLocalTime ? new LocalDate() : new UtcDate()
 
-    const obj = (new Version(parsedVersion, this.seperator)).inc(levels).asObject()
+    const obj = (new Version(parsedVersion, this.seperator, date)).inc(levels).asObject()
 
     const result = this.asString(format, obj)
 
@@ -162,6 +166,10 @@ class Calver {
     }
 
     return result
+  }
+
+  set useLocalTime(value) {
+    this._useLocalTime = value
   }
 }
 

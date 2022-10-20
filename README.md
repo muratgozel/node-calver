@@ -133,6 +133,12 @@ calver.isValid('yyyy.mm.0w', '2020.6.1') === false // because 0W can't be "1", i
 calver.isValid('yyyy.mm.minor.patch', '0.0.0.1') === false // because YYYY and MM can't be "0"
 ```
 
+### Timezone
+calver's default timezone is UTC. If you want to use local timezone, set `useLocalTime`.
+```js
+calver.useLocalTime = true
+```
+
 ## Tests
 ```js
 npm run test
