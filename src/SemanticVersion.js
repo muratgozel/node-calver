@@ -3,13 +3,13 @@ export default class SemanticVersion {
 
   reDigits = /[^0-9]/
 
-  constructor(obj, parentSeperator, isInitialVersion) {
+  constructor(obj, parentSeparator, isInitialVersion) {
     this.MAJOR = null
     this.MINOR = null
     this.PATCH = null
 
     this.isInitialVersion = isInitialVersion
-    this.parentSeperator = parentSeperator
+    this.parentSeparator = parentSeparator
     this.props = []
 
     this.parse(obj)
@@ -70,6 +70,6 @@ export default class SemanticVersion {
     for (const tag of this.constructor.tags) {
       if (this.props.indexOf(tag) !== -1) result.push(this[tag])
     }
-    return result.join(this.parentSeperator)
+    return result.join(this.parentSeparator)
   }
 }

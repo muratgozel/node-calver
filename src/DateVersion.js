@@ -3,7 +3,7 @@ export default class DateVersion {
 
   reDigits = /[^0-9]/
 
-  constructor(obj, parentSeperator, isInitialVersion, date) {
+  constructor(obj, parentSeparator, isInitialVersion, date) {
     this['YYYY'] = null
     this['YY'] = null
     this['0Y'] = null
@@ -16,7 +16,7 @@ export default class DateVersion {
 
     this.hasChanged = false
     this.isInitialVersion = isInitialVersion
-    this.parentSeperator = parentSeperator
+    this.parentSeparator = parentSeparator
     this.props = []
     this.date = date
 
@@ -121,6 +121,6 @@ export default class DateVersion {
     for (const tag of this.constructor.tags) {
       if (this.props.indexOf(tag) !== -1) result.push(this[tag])
     }
-    return result.join(this.parentSeperator)
+    return result.join(this.parentSeparator)
   }
 }

@@ -1,17 +1,17 @@
 export default class ModifierVersion {
-  static seperator = '-'
+  static separator = '-'
   static tags = ['DEV', 'ALPHA', 'BETA', 'RC']
 
   reDigits = /[^0-9\-]/
 
-  constructor(obj, parentSeperator, isInitialVersion) {
+  constructor(obj, parentSeparator, isInitialVersion) {
     this.DEV = null
     this.ALPHA = null
     this.BETA = null
     this.RC = null
 
     this.isInitialVersion = isInitialVersion
-    this.parentSeperator = parentSeperator
+    this.parentSeparator = parentSeparator
     this.prop = null
 
     this.parse(obj)
@@ -51,6 +51,6 @@ export default class ModifierVersion {
   }
 
   asString() {
-    return `${this.constructor.seperator}${this.prop}${this.parentSeperator}${this[this.prop]}`
+    return `${this.constructor.separator}${this.prop}${this.parentSeparator}${this[this.prop]}`
   }
 }
