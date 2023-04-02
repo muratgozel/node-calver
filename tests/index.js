@@ -8,7 +8,7 @@ Date.now = function now() {
 }
 
 // fixed current timezone for test environment.
-// calver respects UTC as a default timezone unless explicitly set useLocalTime as true.
+// calver respects UTC as a default timezone unless useLocalTime set to true.
 process.env.TZ = 'Asia/Tokyo'
 
 assert.strictEqual(calver.isValid('yyyy.mm.0w', '2020.6.1'), false)
@@ -24,11 +24,11 @@ assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1-alpha.1', 'alpha'), '2020.
 assert.strictEqual(calver.inc('yyyy.mm.ww', '2020.6.1-alpha.2', 'calendar'), '2020.6.1')
 assert.strictEqual(calver.inc('yyyy.mm.0w', '2020.6.01', 'calendar'), '2021.1.03')
 
-assert.strictEqual(calver.inc('yyyy.mm.major.minor', '2020.6.30.40', 'calendar'), '2021.1.30.40')
-assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40', 'calendar'), '2021.01.30.40')
-assert.strictEqual(calver.inc('yyyy.mm.major.minor', '2020.6.30.40', 'calendar.dev'), '2021.1.30.40-dev.0')
-assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40-dev.0', 'calendar.dev'), '2021.01.30.40-dev.1')
-assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40-dev.22', 'calendar.dev'), '2021.01.30.40-dev.23')
+assert.strictEqual(calver.inc('yyyy.mm.major.minor', '2020.6.30.40', 'calendar'), '2021.1.0.0')
+assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40', 'calendar'), '2021.01.0.0')
+assert.strictEqual(calver.inc('yyyy.mm.major.minor', '2020.6.30.40', 'calendar.dev'), '2021.1.0.0-dev.0')
+assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40-dev.0', 'calendar.dev'), '2021.01.0.0-dev.1')
+assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40-dev.22', 'calendar.dev'), '2021.01.0.0-dev.23')
 assert.strictEqual(calver.inc('yyyy.0m.major.minor', '2020.06.30.40-dev.23', 'calendar'), '2020.06.30.40')
 
 assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.6.38', 'minor'), '2020.6.39')
@@ -57,7 +57,7 @@ assert.strictEqual(calver.inc('yyyy.mm.major.minor.patch', '', 'minor'), '0.0.0.
 assert.throws(() => calver.inc('yyyy.mm.major.minor.patch', '0.0.0.1.0', 'calendar'))
 assert.strictEqual(calver.inc('yyyy.mm.major.minor.patch', '', 'calendar.dev'), '2021.1.0.0.0-dev.0')
 
-assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.6.38', 'calendar'), '2021.1.38')
+assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.6.38', 'calendar'), '2021.1.0')
 assert.throws(() => calver.inc('yyyy.mm.minor', '2021.1.38', 'calendar'))
 assert.strictEqual(calver.inc('minor.yyyy.mm', '38.2020.6', 'calendar'), '38.2021.1')
 assert.throws(() => calver.inc('minor.yyyy.mm', '38.2021.1', 'calendar'))
@@ -75,3 +75,6 @@ assert.strictEqual(calver.inc('yyyy.mm.minor.patch', '', 'calendar.minor'), '202
 calver.useLocalTime = true
 
 assert.strictEqual(calver.inc('yyyy.mm.dd.minor.patch', '', 'calendar'), '2021.1.20.0.0')
+
+assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.12.2', 'calendar.minor.rc'), '2021.1.0-rc.0')
+assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.12.2', 'calendar.rc'), '2021.1.0-rc.0')

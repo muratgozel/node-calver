@@ -369,11 +369,19 @@ class Version {
     if (SemanticVersion.tags.indexOf(l) !== -1) this.semanticver.inc(l);
     if (ModifierVersion.tags.indexOf(l) !== -1) this.modifierver.inc(l);
 
-    if (levels.length > 1) {
+    if (levels.length === 1) {
+      if (this.isCalendarLeading && this.datever.hasChanged && this.semanticver) {
+        this.semanticver.reset();
+      }
+    }
+    else if (levels.length === 2) {
       const l2 = levels[1];
 
       if (ModifierVersion.tags.indexOf(l2) !== -1 && ModifierVersion.tags.indexOf(l) === -1) {
         this.modifierver.inc(l2);
+        if (this.isCalendarLeading && this.datever.hasChanged && this.semanticver) {
+          this.semanticver.reset();
+        }
       }
       else if (SemanticVersion.tags.indexOf(l2) !== -1) {
         if (this.isCalendarLeading && this.datever.hasChanged) this.semanticver.reset();
@@ -381,6 +389,22 @@ class Version {
       }
       else {
         throw new Error(`The second tag of the level should be either modifier or semantic tag. You specified "${l2}" as the second tag and "${l}" as the first tag.`)
+      }
+    }
+    else if (levels.length === 3) {
+      const l2 = levels[1];
+      const l3 = levels[2];
+
+      if (SemanticVersion.tags.indexOf(l2) !== -1) {
+        if (this.isCalendarLeading && this.datever.hasChanged) this.semanticver.reset();
+        else this.semanticver.inc(l2);
+      }
+
+      if (ModifierVersion.tags.includes(l3) && !ModifierVersion.tags.includes(l2) && !ModifierVersion.tags.includes(l)) {
+        this.modifierver.inc(l3);
+      }
+      else {
+        throw new Error(`The third tag of the level must be a modifier tag. You specified "${l3}".`)
       }
     }
 

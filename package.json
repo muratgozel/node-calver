@@ -1,6 +1,6 @@
 {
   "name": "calver",
-  "version": "22.8.4",
+  "version": "v22.9.1",
   "description": "The calver parser for node. 📆 🚀",
   "main": "./dist/node/lts/cjs/index.js",
   "module": "./dist/node/lts/es/index.js",
@@ -22,22 +22,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/muratgozel/node-calver.git"
-  },
-  "releaser": {
-    "versioning": {
-      "scheme": "calver",
-      "format": "yy.mm.minor"
-    },
-    "npm": {
-      "enable": true,
-      "updatePkgJson": true,
-      "publish": true,
-      "publishCmdSuffix": "--access public"
-    },
-    "github": {
-      "enable": true,
-      "release": true
-    }
   },
   "keywords": [
     "calver",
@@ -72,7 +56,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.5",
     "core-js": "^3.18.3",
-    "node-releaser": "^1.0.1",
+    "node-releaser": "^2.0.0-beta.4",
     "rollup": "^2.57.0",
     "rollup-plugin-terser": "^7.0.2"
   },
