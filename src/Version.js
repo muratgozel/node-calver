@@ -74,7 +74,9 @@ export default class Version {
 
       if (SemanticVersion.tags.indexOf(l2) !== -1) {
         if (this.isCalendarLeading && this.datever.hasChanged) this.semanticver.reset()
-        else this.semanticver.inc(l2)
+        else {
+          if (!this.versionStringHasModifier) this.semanticver.inc(l2)
+        }
       }
 
       if (ModifierVersion.tags.includes(l3) && !ModifierVersion.tags.includes(l2) && !ModifierVersion.tags.includes(l)) {
