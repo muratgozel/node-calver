@@ -49,6 +49,7 @@ assert.strictEqual(calver.getTagType('major'), 'semantic')
 assert.strictEqual(calver.getTagType('patch'), 'semantic')
 assert.strictEqual(calver.getTagType('dev'), 'modifier')
 assert.strictEqual(calver.getTagType('alpha'), 'modifier')
+assert.strictEqual(calver.getTagType('rc'), 'modifier')
 
 assert.strictEqual(calver.inc('major.minor.patch', '', 'major'), '1.0.0')
 assert.strictEqual(calver.inc('yyyy.mm', '', 'calendar'), '2021.1')
