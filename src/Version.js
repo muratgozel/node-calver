@@ -62,7 +62,9 @@ export default class Version {
       }
       else if (SemanticVersion.tags.indexOf(l2) !== -1) {
         if (this.isCalendarLeading && this.datever.hasChanged) this.semanticver.reset()
-        else this.semanticver.inc(l2)
+        else {
+          if (!this.versionStringHasModifier) this.semanticver.inc(l2)
+        }
       }
       else {
         throw new Error(`The second tag of the level should be either modifier or semantic tag. You specified "${l2}" as the second tag and "${l}" as the first tag.`)
