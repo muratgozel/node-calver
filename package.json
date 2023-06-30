@@ -7,7 +7,8 @@
   "type": "module",
   "scripts": {
     "test": "for i in tests/*.js; do node \"$i\"; done",
-    "build": "rollup --config rollup.config.js"
+    "build": "rollup --config rollup.config.js",
+    "prepare": "npm run build"
   },
   "exports": {
     ".": {
