@@ -78,3 +78,9 @@ assert.strictEqual(calver.inc('yyyy.mm.dd.minor.patch', '', 'calendar'), '2021.1
 
 assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.12.2', 'calendar.minor.rc'), '2021.1.0-rc.0')
 assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.12.2', 'calendar.rc'), '2021.1.0-rc.0')
+
+calver.startFrom = 1
+assert.strictEqual(calver.inc('yyyy.mm.minor', '2020.11.1-rc.3', 'calendar.minor'), '2021.1.1')
+assert.strictEqual(calver.inc('yyyy.mm.minor', '2021.1.1-rc.2', 'calendar.minor.dev'), '2021.1.1-dev.1')
+assert.strictEqual(calver.inc('yyyy.mm.minor', '2019.8.5-rc.2', 'calendar.minor.rc'), '2021.1.1-rc.3')
+calver.startFrom = 0

@@ -139,6 +139,14 @@ calver's default timezone is UTC. If you want to use local timezone, set `useLoc
 calver.useLocalTime = true
 ```
 
+### Counting from 1
+For non-date parts of a version (e.g. the `minor` version in the format `YYYY.MM.MINOR`, or the modifier in `2023.7.0-rc.1`), semantic versioning is used, so that the increment begins from `0`. To start skip zero and always start from `1` (or anything else), set `startFrom`:
+
+```js
+calver.startFrom = 1
+calver.inc('yyyy.mm.minor', '', 'calendar') // 2021.1.1
+```
+
 ## Tests
 ```js
 npm run test

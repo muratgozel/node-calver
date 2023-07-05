@@ -3,8 +3,9 @@ import SemanticVersion from './SemanticVersion.js'
 import ModifierVersion from './ModifierVersion.js'
 
 export default class Version {
-  constructor(version, seperator, date) {
+  constructor(version, seperator, date, startFrom) {
     this.seperator = seperator
+    this.startFrom = startFrom
     this.versionStringHasModifier = version.versionStringHasModifier
     this.isInitialVersion = version.isInitialVersion
     this.isCalendarLeading = version.isCalendarLeading
@@ -22,11 +23,11 @@ export default class Version {
     }
 
     if (Object.keys(version.semantic).length > 0) {
-      this.semanticver = new SemanticVersion(version.semantic, this.seperator, this.isInitialVersion)
+      this.semanticver = new SemanticVersion(version.semantic, this.seperator, this.isInitialVersion, this.startFrom)
     }
 
     if (Object.keys(version.modifier).length > 0) {
-      this.modifierver = new ModifierVersion(version.modifier, this.seperator, this.isInitialVersion)
+      this.modifierver = new ModifierVersion(version.modifier, this.seperator, this.isInitialVersion, this.startFrom)
     }
   }
 

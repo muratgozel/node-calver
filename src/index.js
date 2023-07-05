@@ -10,15 +10,16 @@ class Calver {
     this.seperator = '.'
     this.levels = ['CALENDAR', 'MAJOR', 'MINOR', 'PATCH', ...ModifierVersion.tags]
     this._useLocalTime = false
+    this.startFrom = 0
   }
 
   inc(format, version, levels) {
     levels = this.validateLevels(levels)
     format = this.validateFormat(format, levels)
-    const parsedVersion = this.parseVersion(version, format, levels)
+    const parsedVersion = this.parseVersion(version, format, levels, this.startFrom)
     const date = this._useLocalTime ? new LocalDate() : new UtcDate()
 
-    const obj = (new Version(parsedVersion, this.seperator, date)).inc(levels).asObject()
+    const obj = (new Version(parsedVersion, this.seperator, date, this.startFrom)).inc(levels).asObject()
 
     const result = this.asString(format, obj)
 
@@ -98,7 +99,7 @@ class Calver {
       }
 
       if (ModifierVersion.tags.indexOf(value.toUpperCase()) !== -1) {
-        if (value.toUpperCase() != tag) value = '-1'
+        if (value.toUpperCase() != tag) value = (this.startFrom - 1).toString()
         else value = version.slice(startIndex + value.length + 1)
       }
 
