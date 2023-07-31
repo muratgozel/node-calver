@@ -3,13 +3,14 @@ export default class SemanticVersion {
 
   reDigits = /[^0-9]/
 
-  constructor(obj, parentSeperator, isInitialVersion) {
+  constructor(obj, parentSeperator, isInitialVersion, startFrom) {
     this.MAJOR = null
     this.MINOR = null
     this.PATCH = null
 
     this.isInitialVersion = isInitialVersion
     this.parentSeperator = parentSeperator
+    this.startFrom = startFrom
     this.props = []
 
     this.parse(obj)
@@ -27,7 +28,7 @@ export default class SemanticVersion {
   }
 
   reset() {
-    this.props.map(prop => this[prop] = 0)
+    this.props.map(prop => this[prop] = this.startFrom)
   }
 
   inc(level) {
@@ -37,13 +38,13 @@ export default class SemanticVersion {
 
     if (level == 'MAJOR') {
       this.MAJOR = (parseInt(this.MAJOR) + 1).toString()
-      if (this.props.indexOf('MINOR') !== -1) this.MINOR = '0'
-      if (this.props.indexOf('PATCH') !== -1) this.PATCH = '0'
+      if (this.props.indexOf('MINOR') !== -1) this.MINOR = this.startFrom.toString()
+      if (this.props.indexOf('PATCH') !== -1) this.PATCH = this.startFrom.toString()
     }
     
     if (level == 'MINOR') {
       this.MINOR = (parseInt(this.MINOR) + 1).toString()
-      if (this.props.indexOf('PATCH') !== -1) this.PATCH = '0'
+      if (this.props.indexOf('PATCH') !== -1) this.PATCH = this.startFrom.toString()
     }
 
     if (level == 'PATCH') {

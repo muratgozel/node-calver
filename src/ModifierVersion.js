@@ -4,7 +4,7 @@ export default class ModifierVersion {
 
   reDigits = /[^0-9\-]/
 
-  constructor(obj, parentSeperator, isInitialVersion) {
+  constructor(obj, parentSeperator, isInitialVersion, startFrom) {
     this.DEV = null
     this.ALPHA = null
     this.BETA = null
@@ -12,6 +12,7 @@ export default class ModifierVersion {
 
     this.isInitialVersion = isInitialVersion
     this.parentSeperator = parentSeperator
+    this.startFrom = startFrom
     this.prop = null
 
     this.parse(obj)
