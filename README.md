@@ -1,152 +1,191 @@
-# node-calver | The Calendar Versioner
-The calver parser for node. 📆 🚀
+# node-calver
 
-![NPM](https://img.shields.io/npm/l/calver)
-[![npm version](https://badge.fury.io/js/calver.svg)](https://badge.fury.io/js/calver)
-![npm bundle size](https://img.shields.io/bundlephobia/min/calver)
-![npm](https://img.shields.io/npm/dy/calver)
+Calendar based software versioning library as node.js module and with cli support. 📅
 
-## Why
-Yes, [semantic versioning](https://semver.org/) isn't the only versioning scheme. Software developers are versioning their software for decades and there are various schemes. [Calendar versioning](https://calver.org/) is one of them. It has a bit more flexible when compared to semver. It's based on dates and more human-readable. Personally, using it in my frontend projects and it's working pretty well.
+## What is calendar based versioning?
 
-## Implementation
-There is no standart (as much in semver) about the implementation of calendar versioning. The introduction in [calver.org](https://calver.org/) inspired me a lot and I build the API flexible enough for user to create versions in various formats.
+It's a way of tagging software state based on in combination of a chosen calendar tags such as YYYY, MM, DD. The chosen tags convey the message of how frequently the software gets major updates, to the user. It doesn't tell anything about breaking changes (there is [git-diff](https://git-scm.com/docs/git-diff) for that) but it tells when the next major release will come.
+
+I recommend [this article by Donald Stufft](https://caremad.io/posts/2016/02/versioning-software/) to read more about versioning softwares and [this website by Mahmoud Hashemi](https://calver.org) to learn more about calendar versioning.
+
+## What does it look like?
+
+The format consist of two parts. The calendar part and the minor changes counter. The calendar part describes software's release cycle. The minor part is just a counter over the main release. Take **2024-4.104** for example; the year and the month separated by a dash and the minor counter separated by a dot. So the general template for the format is `YYYY-MM-DD.MINOR`. One might choose:
+
+-   YYYY for yearly release cycle
+-   YYYY-MM for monthly release cycle
+-   YYYY-WW for weekly release cycle
+-   YYYY-MM-DD for daily release cycle
+
+The releases sent before the next release time period, counts as minor changes and therefore it increments the minor part of the version.
+
+## Prerequisites
+
+-   What is your release cycle? Decide how frequently you will release your software. Excluding minor changes such as security fixes or other kind of features and fixes.
 
 ## Install
-This is node.js module and compiled for `cjs` and `es` module environments. There is no dependency and it can be installed via npm:
+
 ```sh
-npm i calver
+npm i -D calver
+# or
+pnpm add -D calver
 ```
 
 ## Usage
-Require or import:
-```js
-const calver = require('calver')
-// or
-import calver from 'calver'
-```
-If your `node < 14` then:
-```js
-const calver = require('calver/node/lts')
-// or
-import calver from 'calver/node/lts'
-```
 
-Unlike semver, calver needs a `format` to deal with version strings. 
+The library can be used both as a node.js module and a cli app. Both usages documented below per feature.
 
-### Choose Format
-A format is a recipe for calver to decide what will the next version be. In semver, format is fixed (MAJOR.MINOR.PATCH.MODIFIER) but in calver you create your own version format by using available tags.
+### Library defaults
 
-| Tag       | Type      | Description |
-| ---       | ---       | --- |
-| YYYY      | calendar  | Zero based year with max 4 digit. |
-| YY        | calendar  | Zero based year with max 2 digit. |
-| 0Y        | calendar  | Zero padded 2 digit year. |
-| MM        | calendar  | Zero based month with max 2 digit. |
-| 0M        | calendar  | Zero padded 2 digit month. |
-| WW        | calendar  | Zero based week of the year with max 2 digit. |
-| 0W        | calendar  | Zero padded 2 digit week of the year. |
-| DD        | calendar  | Zero based day of the month with max 2 digit. |
-| 0D        | calendar  | Zero padded 2 digit day of the month. |
-| MAJOR     | semantic  | Auto-increment number for breaking changes. |
-| MINOR     | semantic  | Auto-increment number for new features. |
-| PATCH     | semantic  | Auto-increment number for bug fixes. |
-| DEV       | modifier  | Auto-increment number for dev updates. |
-| ALPHA     | modifier  | Auto-increment number for alpha updates. |
-| BETA      | modifier  | Auto-increment number for beta updates. |
-| RC        | modifier  | Auto-increment number for release candidate updates. |
+There are some defaults to keep in mind while using node-calver.
 
-You can combine any of these tags while choosing a format except modifiers. Let's say we choose:
-```js
-const format = 'yyyy.mm.minor.patch'
-```
-and create an initial release:
-```js
-// assuming current date is 2021.01
-const version = calver.inc(format, '', 'calendar')
-// version = 2021.1.0.0
-```
-The second argument is previous version string that we would like to increment but left empty to show to create an initial version.
+-   Minor counter is 0 by default and it's hidden from the output if it's zero.
+-   The values of calendar tags computed based on UTC time.
+-   The year always exists in the output and can't be omitted. The other tags is up to a user.
+-   When month, week or day isn't specified, they are considered as zero and this is important when comparing dates.
 
-The third argument is the level of the increment operation. `level` might be one of the following:
+### Cycles
 
-| Level                         | Type      | Description |
-| ---                           | ---       | --- |
-| calendar                      | calendar  | Updates calendar tags to the current date and removes modifier if it exist. |
-| major                         | semantic  | Increments the major tag, resets minor, patch tags and removes modifier if it exist. |
-| minor                         | semantic  | Increments the minor tag, resets the patch tag and removes modifier if it exist. |
-| patch                         | semantic  | Increments tha patch tag and removes modifier if it exist. |
-| dev                           | modifier  | Increments the dev tag. |
-| alpha                         | modifier  | Increments the alpha tag. |
-| beta                          | modifier  | Increments the beta tag. |
-| rc                            | modifier  | Increments the rc tag. |
-| calendar.[dev,alpha,beta,rc]  | composite | Updates calendar tags and adds specified modifier tag. |
-| major.[dev,alpha,beta,rc]     | composite | Increments the major tag and adds specified modifier tag. |
-| minor.[dev,alpha,beta,rc]     | composite | Increments the minor tag and adds specified modifier tag. |
-| patch.[dev,alpha,beta,rc]     | composite | Increments the patch tag and adds specified modifier tag. |
+Finds the next version based on release cycle.
 
-### Increment
-Let's make some more updates:
-```js
-// assuming current date is 2021.01
+```ts
+import { calver } from 'calver'
 
-const version = calver.inc(format, '2021.1.0.0', 'minor.dev')
-// version = 2021.1.1.0-dev.0
-
-const version = calver.inc(format, '2021.1.1.0-dev.0', 'dev')
-// version = 2021.1.1.0-dev.1
-
-const version = calver.inc(format, '2021.1.1.0-dev.1', 'dev')
-// version = 2021.1.1.0-dev.2
-
-const version = calver.inc(format, '2021.1.1.0-dev.2', 'alpha')
-// version = 2021.1.1.0-alpha.0
-
-const version = calver.inc(format, '2021.1.1.0-alpha.0', 'alpha')
-// version = 2021.1.1.0-alpha.1
-
-const version = calver.inc(format, '2021.1.1.0-alpha.1', 'minor')
-// version = 2021.1.1.0
-
-const version = calver.inc(format, '2021.1.1.0', 'minor')
-// version = 2021.1.2.0
-
-const version = calver.inc(format, '2021.1.2.0', 'patch')
-// version = 2021.1.2.1
+calver.cycle('2024-4.204')
 ```
 
-To create an initial version, just leave the version field empty:
-```js
-const version = calver.inc(format, '', 'calendar') // 2021.1.0.0
+```sh
+calver 2024-4.204
 ```
 
-To increment based on both calendar and semantic tags:
-```js
-const version = calver.inc('yy.mm.minor', '', 'calendar.minor') // 2021.1.0
-const version = calver.inc('yy.mm.minor', '2021.1.0', 'calendar.minor') // 2021.1.1
+Depending on the date the code above executed, the output will be `2024-4.205`, `2024-5` or `2024-[current month]`.
+
+It's capable to understand the format you chose with one exception.
+
+```ts
+calver.cycle('2024.204')
 ```
 
-### Validation
-Test the input if it is valid against a format:
-```js
-calver.isValid('yyyy.mm.0w', '2020.6.1') === false // because 0W can't be "1", it should be "01"
-calver.isValid('yyyy.mm.minor.patch', '0.0.0.1') === false // because YYYY and MM can't be "0"
+```sh
+calver 2024.204
 ```
 
-### Timezone
-calver's default timezone is UTC. If you want to use local timezone, set `useLocalTime`.
-```js
-calver.useLocalTime = true
+Outputs `2024.205` or `[current year]`.
+
+The full year, month and day cycle:
+
+```ts
+calver.cycle('2024-4-16.204')
 ```
 
-## Tests
-```js
-npm run test
+```sh
+calver 2024-4-16.204
 ```
-Note that the `Date.now()` function replaced with a fixed value in tests so we can reliably run tests whenever we want.
 
-## Note
-Software versioning is hard. None of the schemes are working perfectly and currently it highly depends on the how you are going to use. See [this article written by donald stufft](https://caremad.io/posts/2016/02/versioning-software/).
+Outputs `2024-4-16.205` or `[current date as YYYY-MM-DD]`.
+
+And the exception is weeks. A cycle option needs to be passed for weekly release cycles:
+
+```ts
+calver.cycle('2024-32.204', { cycle: 'week' })
+```
+
+```sh
+calver 2024-32.204 --cycle week # or -c week
+```
+
+Outputs `2024-32.205` or `2024-[current week of the year]`.
+
+### Minor releases
+
+A minor method just increments the minor portion of the version and leaves the date portion as it is.
+
+```ts
+calver.minor('2024') // outputs 2024.1
+```
+
+```sh
+calver 2024 --minor # outputs 2024.1
+```
+
+```ts
+calver.minor('2024.204') // outputs 2024.205
+```
+
+```sh
+calver 2024.204 --minor # outputs 2024.205
+```
+
+```ts
+calver.minor('2024-4-16.204') // outputs 2024-4-16.205
+```
+
+```sh
+calver 2024-4-16.204 --minor # outputs 2024-4-16.205
+```
+
+and so on.
+
+### Create an initial version
+
+```ts
+calver.initial({ cycle: 'month' })
+```
+
+```sh
+calver initial --cycle month
+```
+
+Outputs `[current year]-[current month]`.
+
+### Valid
+
+```ts
+calver.valid('2024-4.123')
+// provide cycle for more strict check
+calver.valid('2024-4.123', { cycle: 'month' })
+```
+
+Outputs a `boolean`.
+
+```sh
+calver valid 2024-4.123
+# or specify --cycle flag for more strict check
+calver valid --cycle month
+```
+
+Outputs the exact version string or exits with error.
+
+### Comparison
+
+```ts
+// newer than
+calver.nt('2024-4-20', '2024-4-19') // true
+calver.nt('2024-4-20', '2024') // true
+calver.nt('2024', '2024-4-20') // false
+
+// older than
+calver.ot('2024-4-20', '2024-4-19') // false
+calver.ot('2024-4-20', '2024') // false
+calver.ot('2024', '2024-4-20') // true
+
+// speciy cycle if you use weeks
+calver.nt('2024-32', '2024-30', { cycle: 'week' }) // true
+```
+
+Returns a `boolean`
+
+```sh
+calver nt 2024-4-20 2024-4-19
+calver ot 2024-4-20 2024-4-19
+calver nt 2024-32 2024-30 --cycle week
+```
+
+Outputs the exact version string or exits with error.
+
+## Contributing
+
+If you're interested in contributing, read the [CONTRIBUTING.md](https://github.com/muratgozel/muratgozel/blob/main/CONTRIBUTING.md) first, please.
 
 ---
 
@@ -156,4 +195,4 @@ Version management of this repository done by [releaser](https://github.com/mura
 
 Thanks for watching 🐬
 
-[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F1RFO7)
+[![Support me on Patreon](https://cdn.muratgozel.com.tr/support-me-on-patreon.v1.png)](https://patreon.com/muratgozel?utm_medium=organic&utm_source=github_repo&utm_campaign=github&utm_content=join_link)
