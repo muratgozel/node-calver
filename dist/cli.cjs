@@ -4,7 +4,7 @@ var commander = require('commander')
 var index = require('./index.cjs')
 
 var name = 'calver'
-var version = 'v22.9.1'
+var version = '24.0.0'
 var description =
     'Calendar based software versioning library as node.js module and with cli support.'
 var type = 'module'
@@ -14,10 +14,11 @@ var bin = {
     calver: './dist/cli.js',
 }
 var scripts = {
-    build: 'pkgroll --target=es2020 --target=node16',
+    build: 'pkgroll --target=es2020 --target=node16 --clean-dist',
     format: 'prettier --write --ignore-unknown .',
     lint: 'eslint .',
     test: 'vitest run',
+    prepare: 'husky',
 }
 var exports$1 = {
     require: {
@@ -51,10 +52,15 @@ var bugs = {
 }
 var homepage = 'https://github.com/muratgozel/node-calver#readme'
 var devDependencies = {
-    '@eslint/js': '^9.2.0',
-    eslint: '^9.2.0',
+    '@commitlint/cli': '^19.3.0',
+    '@commitlint/config-conventional': '^19.2.2',
+    '@commitlint/types': '^19.0.3',
+    '@eslint/js': '^9.3.0',
+    eslint: '^9.3.0',
+    husky: '^9.0.11',
+    'lint-staged': '^15.2.2',
     'node-releaser': '^2.1.4',
-    pkgroll: '^2.0.2',
+    pkgroll: '^2.1.0',
     prettier: '^3.2.5',
     typescript: '^5.4.5',
     'typescript-eslint': '^7.9.0',
@@ -74,6 +80,9 @@ var pkg = {
     scripts: scripts,
     exports: exports$1,
     files: files,
+    'lint-staged': {
+        '**/*': 'prettier --write --ignore-unknown .',
+    },
     browserslist: browserslist,
     repository: repository,
     keywords: keywords,
