@@ -1,6 +1,6 @@
 {
     "name": "calver",
-    "version": "24.0.0",
+    "version": "24.0.2",
     "description": "Calendar based software versioning library as node.js module and with cli support.",
     "type": "module",
     "main": "./dist/index.js",
