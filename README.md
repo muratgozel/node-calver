@@ -49,7 +49,7 @@ There are some defaults to keep in mind while using node-calver.
 Finds the next version based on release cycle.
 
 ```ts
-import { calver } from 'calver'
+import * as calver from 'calver'
 
 calver.cycle('2024-4.204')
 ```
