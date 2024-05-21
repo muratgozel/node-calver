@@ -1,4 +1,7 @@
 declare const CALVER_CYCLES: CalVerCycle[]
+declare function clean(str: string): string
+declare function suffix(str: string, suffix: string): string
+declare function prefix(str: string, prefix?: string): string
 declare function initial(settings: CalVerCycleSettings): string
 declare function nt(
     newer: string,
@@ -49,12 +52,15 @@ export {
     type CalVerCycleSettings,
     type CalVerObject,
     type CalVerValidSettings,
+    clean,
     cycle,
     initial,
     isCycleValid,
     nt,
     ot,
     parse,
+    prefix,
+    suffix,
     toString,
     valid,
 }

@@ -1,12 +1,29 @@
 'use strict'
 
 const CALVER_RE_SYNTAX = /^[0-9]{4}(-[0-9]{1,2}(-[0-9]{1,2})?)?(\.[0-9]+)?$/
+const CALVER_SEARCH_RE_SYNTAX =
+    /[0-9]{4}(-[0-9]{1,2}(-[0-9]{1,2})?)?(\.[0-9]+)?/
 const CALVER_CALENDAR_PORTION_SEPARATOR = '-'
 const CALVER_MINOR_PORTION_SEPARATOR = '.'
 const CALVER_NUMBER_OF_WEEKS_IN_A_YEAR = 54
 const CALVER_NUMBER_OF_MONTHS_IN_A_YEAR = 12
 const CALVER_NUMBER_OF_DAYS_IN_A_MONTH = 31
 const CALVER_CYCLES = ['auto', 'year', 'month', 'week', 'day']
+function clean(str) {
+    const result = str.match(CALVER_SEARCH_RE_SYNTAX)
+    if (!result) {
+        throw new Error(
+            'Failed to clean the text that was supposed to contain a calver version.',
+        )
+    }
+    return result[0]
+}
+function suffix(str, suffix2) {
+    return str + (suffix2 ?? '')
+}
+function prefix(str, prefix2 = 'v') {
+    return (prefix2 ?? '') + str
+}
 function initial(settings) {
     if (!isCycleValid(settings.cycle, false)) {
         throw new Error('Invalid release cycle')
@@ -232,11 +249,14 @@ function isCycleValid(str, allowAuto = true) {
 }
 
 exports.CALVER_CYCLES = CALVER_CYCLES
+exports.clean = clean
 exports.cycle = cycle
 exports.initial = initial
 exports.isCycleValid = isCycleValid
 exports.nt = nt
 exports.ot = ot
 exports.parse = parse
+exports.prefix = prefix
+exports.suffix = suffix
 exports.toString = toString
 exports.valid = valid

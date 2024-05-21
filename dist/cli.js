@@ -7,11 +7,14 @@ import {
     valid,
     nt,
     ot,
+    prefix,
+    suffix,
+    clean,
     isCycleValid,
 } from './index.js'
 
 var name = 'calver'
-var version = '24.0.0'
+var version = '24.0.2'
 var description =
     'Calendar based software versioning library as node.js module and with cli support.'
 var type = 'module'
@@ -178,6 +181,26 @@ program
             )
         }
         console.log(str)
+    })
+program
+    .command('prefix')
+    .argument('<string>', 'version string')
+    .option('--prefix <string>', 'The prefix.', 'v')
+    .action((str, options) => {
+        console.log(prefix(str, options.prefix))
+    })
+program
+    .command('suffix')
+    .argument('<string>', 'version string')
+    .option('--suffix <string>', 'The suffix.')
+    .action((str, options) => {
+        console.log(suffix(str, options.suffix))
+    })
+program
+    .command('clean')
+    .argument('<string>', 'version string')
+    .action((str) => {
+        console.log(clean(str))
     })
 program.parse()
 function parseCycleArg(value) {

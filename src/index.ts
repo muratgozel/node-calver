@@ -1,4 +1,6 @@
 const CALVER_RE_SYNTAX = /^[0-9]{4}(-[0-9]{1,2}(-[0-9]{1,2})?)?(\.[0-9]+)?$/
+const CALVER_SEARCH_RE_SYNTAX =
+    /[0-9]{4}(-[0-9]{1,2}(-[0-9]{1,2})?)?(\.[0-9]+)?/
 const CALVER_CALENDAR_PORTION_SEPARATOR = '-'
 const CALVER_MINOR_PORTION_SEPARATOR = '.'
 const CALVER_NUMBER_OF_WEEKS_IN_A_YEAR = 54
@@ -11,6 +13,26 @@ export const CALVER_CYCLES: CalVerCycle[] = [
     'week',
     'day',
 ]
+
+export function clean(str: string) {
+    const result = str.match(CALVER_SEARCH_RE_SYNTAX)
+
+    if (!result) {
+        throw new Error(
+            'Failed to clean the text that was supposed to contain a calver version.',
+        )
+    }
+
+    return result[0]
+}
+
+export function suffix(str: string, suffix: string) {
+    return str + (suffix ?? '')
+}
+
+export function prefix(str: string, prefix: string = 'v') {
+    return (prefix ?? '') + str
+}
 
 export function initial(settings: CalVerCycleSettings) {
     if (!isCycleValid(settings.cycle, false)) {

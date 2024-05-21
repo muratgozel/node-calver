@@ -8,6 +8,10 @@ import {
     initial,
     nt,
     ot,
+    prefix,
+    suffix,
+    clean,
+    type CalVerCycle,
 } from './index.js'
 
 const program = new Command()
@@ -23,7 +27,7 @@ program
         parseCycleArg,
         'auto',
     )
-    .action((str, options) => {
+    .action((str: string, options: { cycle: CalVerCycle }) => {
         const next = cycle(str, { cycle: options.cycle })
         console.log(next)
     })
@@ -35,7 +39,7 @@ program
         'release cycle. one of ' + CALVER_CYCLES.join(', '),
         parseCycleArgStrict,
     )
-    .action((options) => {
+    .action((options: { cycle: CalVerCycle }) => {
         const initialVersion = initial({ cycle: options.cycle })
         console.log(initialVersion)
     })
@@ -49,7 +53,7 @@ program
         parseCycleArg,
         'auto',
     )
-    .action((str, options) => {
+    .action((str: string, options: { cycle: CalVerCycle }) => {
         const validVersion = valid(str, { cycle: options.cycle })
         console.log(validVersion)
     })
@@ -64,7 +68,7 @@ program
         parseCycleArg,
         'auto',
     )
-    .action((str, str2, options) => {
+    .action((str: string, str2: string, options: { cycle: CalVerCycle }) => {
         const isNewer = nt(str, str2, { cycle: options.cycle })
         if (!isNewer) {
             throw new Error(
@@ -84,7 +88,7 @@ program
         parseCycleArg,
         'auto',
     )
-    .action((str, str2, options) => {
+    .action((str: string, str2: string, options: { cycle: CalVerCycle }) => {
         const isNewer = ot(str, str2, { cycle: options.cycle })
         if (!isNewer) {
             throw new Error(
@@ -92,6 +96,29 @@ program
             )
         }
         console.log(str)
+    })
+
+program
+    .command('prefix')
+    .argument('<string>', 'version string')
+    .option('--prefix <string>', 'The prefix.', 'v')
+    .action((str: string, options: { prefix: string }) => {
+        console.log(prefix(str, options.prefix))
+    })
+
+program
+    .command('suffix')
+    .argument('<string>', 'version string')
+    .option('--suffix <string>', 'The suffix.')
+    .action((str: string, options: { suffix: string }) => {
+        console.log(suffix(str, options.suffix))
+    })
+
+program
+    .command('clean')
+    .argument('<string>', 'version string')
+    .action((str: string) => {
+        console.log(clean(str))
     })
 
 program.parse()

@@ -8,6 +8,9 @@ import {
     valid,
     nt,
     ot,
+    prefix,
+    suffix,
+    clean,
 } from './index.js'
 
 const samples: [string, CalVerObject][] = [
@@ -175,4 +178,18 @@ test('older than', () => {
     expect(ot('2020', '2020')).toBe(false)
     expect(ot('2020', '2019')).toBe(false)
     expect(ot('2020', '2021')).toBe(true)
+})
+
+test('prefix', () => {
+    expect(prefix('2024-4.123')).toBe('v2024-4.123')
+    expect(prefix('2024-4.123', 'ver')).toBe('ver2024-4.123')
+    expect(prefix('2024-4.123', 'ver-')).toBe('ver-2024-4.123')
+})
+
+test('suffix', () => {
+    expect(suffix('2024-4.123', '-something')).toBe('2024-4.123-something')
+})
+
+test('clean', () => {
+    expect(clean(' a=2024-4.123-something ')).toBe('2024-4.123')
 })

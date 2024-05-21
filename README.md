@@ -183,6 +183,28 @@ calver nt 2024-32 2024-30 --cycle week
 
 Outputs the exact version string or exits with error.
 
+### Prefix, suffix and clean
+
+Simple helper methods that might be useful in your versioning processes.
+
+```ts
+calver.prefix('2024-4.123') // outputs v2024-4.123
+calver.prefix('2024-4.123', 'v') // outputs v2024-4.123
+
+calver.suffix('2024-4.123', '-something') // outputs 2024-4.123-something
+
+calver.clean(' =v2024-4.123-something ') // 2024-4.123
+```
+
+They work same as in the module api:
+
+```sh
+calver prefix 2024-4.123
+calver prefix 2024-4.123 --prefix v
+calver suffix 2024-4.123 --suffix something
+calver clean " =v2024-4.123-something "
+```
+
 ## Contributing
 
 If you're interested in contributing, read the [CONTRIBUTING.md](https://github.com/muratgozel/muratgozel/blob/main/CONTRIBUTING.md) first, please.
